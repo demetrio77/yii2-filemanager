@@ -1,20 +1,20 @@
 <?php
 
-namespace frontend\modules\manager\assets;
+namespace demetrio77\manager\assets;
 
 use yii\web\AssetBundle;
 
 class ModuleAsset extends AssetBundle
 {
-	public $sourcePath = '@frontend/modules/manager/assets';
+	public $sourcePath = '@demetrio77/manager/assets';
 	public $css = ['css/styles.css', 'css/jstree/style.css'];
 	public $js = ['js/jquery.fileManager.js'];
 	public $depends = ['yii\web\JqueryAsset', 
-		'frontend\modules\manager\assets\JqueryScrolltoAsset', 
-		'frontend\modules\manager\assets\ModalAsset', 
-		'frontend\modules\manager\assets\JqueryUiAsset',
-		'frontend\modules\manager\assets\JqueryContextmenuAsset',
-		'frontend\modules\manager\assets\FileApiAsset',
-		'frontend\modules\manager\assets\JqueryCropAsset',
+		'demetrio77\manager\assets\JqueryScrolltoAsset', 
+		'demetrio77\manager\assets\ModalAsset', 
+		'demetrio77\manager\assets\JqueryUiAsset',
+		'demetrio77\manager\assets\JqueryContextmenuAsset',
+		'demetrio77\manager\assets\FileApiAsset',
+		'demetrio77\manager\assets\JqueryCropAsset',
 	];
 }

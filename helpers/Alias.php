@@ -1,8 +1,8 @@
 <?php
 
-namespace frontend\modules\manager\helpers;
+namespace demetrio77\manager\helpers;
 
-use frontend\modules\manager\Module;
+use demetrio77\manager\Module;
 use yii\base\Model;
 use yii\helpers\ArrayHelper;
 

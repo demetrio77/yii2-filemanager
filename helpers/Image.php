@@ -1,6 +1,6 @@
 <?php
 
-namespace frontend\modules\manager\helpers;
+namespace demetrio77\manager\helpers;
 
 use Yii;
 use yii\base\Object;
@@ -11,7 +11,7 @@ use yii\helpers\FileHelper;
  * @property \Imagick $imagick
  * @property array $options
  * @property string $tmpName
- * @property frontend\modules\manager\helpers\File $File
+ * @property demetrio77\manager\helpers\File $File
  * @author dk
  *
  */

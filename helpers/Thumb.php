@@ -1,6 +1,6 @@
 <?php
 
-namespace frontend\modules\manager\helpers;
+namespace demetrio77\manager\helpers;
 
 use yii\base\Object;
 use yii\helpers\FileHelper;

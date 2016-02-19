@@ -1,6 +1,6 @@
 <?php
 
-namespace frontend\modules\manager\helpers;
+namespace demetrio77\manager\helpers;
 
 use yii\base\Object;
 use yii\helpers\ArrayHelper;
@@ -9,8 +9,8 @@ use yii\helpers\Json;
 use yii\web\UploadedFile;
 
 /**
- * @property frontend\modules\manager\helpers\File $Folder
- * @property frontend\modules\manager\helpers\Alias $Alias
+ * @property demetrio77\manager\helpers\File $Folder
+ * @property demetrio77\manager\helpers\Alias $Alias
  * @author dk
  *
  */

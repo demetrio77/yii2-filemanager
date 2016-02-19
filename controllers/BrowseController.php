@@ -1,17 +1,17 @@
 <?php
 
-namespace frontend\modules\manager\controllers;
+namespace demetrio77\manager\controllers;
 
 use Yii;
 use yii\web\Response;
-use frontend\modules\manager\helpers\Alias;
-use frontend\modules\manager\helpers\FileSystem;
+use demetrio77\manager\helpers\Alias;
+use demetrio77\manager\helpers\FileSystem;
 use yii\web\NotFoundHttpException;
-use frontend\modules\manager\helpers\File;
-use frontend\modules\manager\models\RenameModel;
-use frontend\modules\manager\models\MkdirModel;
-use frontend\modules\manager\helpers\Uploader;
-use frontend\modules\manager\helpers\Image;
+use demetrio77\manager\helpers\File;
+use demetrio77\manager\models\RenameModel;
+use demetrio77\manager\models\MkdirModel;
+use demetrio77\manager\helpers\Uploader;
+use demetrio77\manager\helpers\Image;
 
 class BrowseController extends BaseController
 {

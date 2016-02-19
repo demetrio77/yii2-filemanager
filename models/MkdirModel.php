@@ -1,6 +1,6 @@
 <?php
 
-namespace frontend\modules\manager\models;
+namespace demetrio77\manager\models;
 
 use yii\base\Model;
 

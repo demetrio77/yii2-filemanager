@@ -1,6 +1,6 @@
 <?php
 
-namespace frontend\modules\manager\helpers;
+namespace demetrio77\manager\helpers;
 
 use yii\helpers\FileHelper;
 use yii\base\Model;
@@ -13,14 +13,14 @@ use yii\base\Model;
  * @property string $extension
  * @property string $url
  * @property integer $size
- * @property frontend\modules\manager\helpers\Alias $alias
+ * @property demetrio77\manager\helpers\Alias $alias
  * @property bool $exists
  * @property bool $isFolder
  * @property bool $isImage 
  * @property bool $hasFiles
  * @property string $absolute
- * @property frontend\modules\manager\helpers\Thumb $thumb
- * @property frontend\modules\manager\helpers\Image $image
+ * @property demetrio77\manager\helpers\Thumb $thumb
+ * @property demetrio77\manager\helpers\Image $image
  * @author dk
  *
  */
@@ -195,7 +195,7 @@ class File extends Model
 	/**
 	 * 
 	 * @param unknown $name
-	 * @param frontend\modules\manager\models\MkdirModel $model
+	 * @param demetrio77\manager\models\MkdirModel $model
 	 * @return boolean
 	 */
 	public function mkdir($name, $model = false) 

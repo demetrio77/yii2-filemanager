@@ -1,6 +1,6 @@
 <?php
 
-use frontend\modules\manager\assets\ModuleAsset;
+use demetrio77\manager\assets\ModuleAsset;
 use yii\helpers\Html;
 use yii\bootstrap\BootstrapAsset;
 

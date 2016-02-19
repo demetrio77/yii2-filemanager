@@ -1,6 +1,6 @@
 <?php 
 
-namespace frontend\modules\manager;
+namespace demetrio77\manager;
 
 class Module extends \yii\base\Module
 {
