@@ -13,25 +13,9 @@ use demetrio77\manager\models\MkdirModel;
 use demetrio77\manager\helpers\Uploader;
 use demetrio77\manager\helpers\Image;
 
-class BrowseController extends BaseController
+class ConnectorController extends BaseController
 {
-	public $layout = 'main';
-
-	public function actionIndex($configuration = 'default')
-	{
-		$CKEditor = Yii::$app->request->get('CKEditor');
-		$langCode = Yii::$app->request->get('langCode');
-		$CKEditorFuncNum = Yii::$app->request->get('CKEditorFuncNum');
-		
-		return $this->render('index', [
-			'configuration' => $configuration,
-			'CKEditor' => $CKEditor,
-			'langCode' => $langCode,
-			'CKEditorFuncNum' => $CKEditorFuncNum
-		]);
-	}
-	
-	public function actionConnector($action, array $options, $configuration = 'default')
+	public function actionIndex($action, array $options, $configuration = 'default')
 	{
 		switch ($action) {
 			case 'data': 

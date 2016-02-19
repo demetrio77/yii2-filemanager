@@ -10,8 +10,7 @@ $this->registerJs("
 			langCode: '$langCode',
 			CKEditorFuncNum: '$CKEditorFuncNum'
 		},
-		connector: '".Url::toRoute(['browse/connector', 'configuration' => $configuration])."'
-		,fileName: 'http://www.uuu.ru/userfiles/file/gid/101.jpg'
+		connector: '".Url::toRoute(['connector/', 'configuration' => $configuration])."'
 	});
 		
 ", View::POS_READY);
@@ -68,7 +67,7 @@ $this->registerJs("
 		</td>
 		<td class="fm-panel">
 			<div style="margin-top:10px; width:100%; display: none;" class="btn-group-vertical btn-group-sm group-file" role="group" aria-label="">
-			  <button type="button" class="btn btn-default">
+			  <button type="button" class="btn btn-default action-select">
 			  	<span class="glyphicon glyphicon-plus"></span> Выбрать
 			  </button>
 			</div>

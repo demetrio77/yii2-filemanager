@@ -15,7 +15,7 @@
     var csrfToken = $('meta[name="csrf-token"]').attr("content");
     
     var defaults = {
-    	ckEditor: {}, //instance: 'CKEditor',langCode: 'ru',CKEditorFuncNum: 0
+    	CKEditor: {}, //instance: 'CKEditor',langCode: 'ru',CKEditorFuncNum: 0
         //filterSelector: undefined
     	connector : '',
     	fileName : '',
@@ -1292,8 +1292,11 @@
                 	
                 	view.content.on('dblclick', '.ft-item-folder', function(){
                 		self.openFolder($(this).data('id'));                		
-                	}).
-                	on('click', '.ft-item', function(){
+                	})
+                	.on('dblclick', '.ft-item-file', function(){
+                		self.select($(this).data('id'));               		
+                	})
+                	.on('click', '.ft-item', function(){
                 		var id = $(this).data('id');
                 		view.setSelected(id, {forceUpLevel: true});
                 	});
@@ -1335,8 +1338,11 @@
                 	
                 	view.sidePanel.on('click', '.action-refresh', function(){
                 		self.refresh();
-                	}).
-                	on('click', '.action-rename', function(){
+                	})
+                	.on('click', '.action-select', function(){
+                		self.select(view.selected);
+                	})
+                	.on('click', '.action-rename', function(){
                 		self.rename(view.selected);
                 	})
                 	.on('click', '.action-mkdir', function(){
@@ -1358,7 +1364,7 @@
                 		self.upload(view.current);
                 	})
                 	.on('click', '.action-image', function(){
-                		self.image(view.current);
+                		self.image(view.selected);
                 	});
                 	
                 	this.upload = function(id) {
@@ -1572,7 +1578,9 @@
                 	};
                 	
                 	this.select = function(id) {
-                		
+                		var item = model.data[id];
+                		window.opener.CKEDITOR.tools.callFunction( $this.settings.CKEditor.CKEditorFuncNum, item.url());
+                        window.close();
                 	};
                 	
                 	this.rename = function(id) {
