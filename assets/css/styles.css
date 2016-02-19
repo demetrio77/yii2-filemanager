@@ -1,0 +1,381 @@
+@charset "UTF-8";
+@CHARSET "UTF-8";
+body, html, .fileManager {
+  height: 100%;
+  width: 100%; }
+
+.fm-header {
+  width: 100%;
+  height: 40px;
+  background-color: #efefef;
+  border-bottom: 1px solid #ddd;
+  z-index: 1;
+  padding-top: 3px; }
+  .fm-header .btn {
+    background-color: #f9f9f9; }
+    .fm-header .btn.active {
+      background-color: #cccccc; }
+
+.fm-footer {
+  height: 30px;
+  background-color: #efefef;
+  border-top: 1px solid #ddd;
+  width: 100%;
+  z-index: 1; }
+
+.fm-folders {
+  padding: 10px;
+  vertical-align: top;
+  border-right: 3px solid #ddd;
+  min-width: 250px;
+  width: 20%;
+  max-width: 350px; }
+
+.fm-files {
+  vertical-align: top;
+  width: 65%;
+  padding: 10px; }
+
+.files-table {
+  max-height: 100%;
+  overflow: auto; }
+  .files-table .ft-content {
+    display: table-row-group; }
+  .files-table .files-view-preview {
+    width: 100%; }
+    .files-table .files-view-preview .ft-header {
+      display: none; }
+    .files-table .files-view-preview .ft-item {
+      display: block;
+      float: left;
+      width: 110px;
+      height: 170px;
+      font-size: 14px;
+      overflow: hidden;
+      margin: 10px;
+      padding: 7px;
+      cursor: pointer;
+      border: 1px solid #dedede;
+      text-align: center;
+      background-color: #fff; }
+      .files-table .files-view-preview .ft-item:hover {
+        background-color: #e7f4f9; }
+      .files-table .files-view-preview .ft-item.drop-hover {
+        background-color: #1474b8;
+        color: #ffffff; }
+    .files-table .files-view-preview .ft-thumb {
+      position: absolute;
+      height: 80px;
+      display: table-row;
+      width: 100%;
+      top: 0;
+      left: 0; }
+      .files-table .files-view-preview .ft-thumb IMG {
+        width: 100px;
+        height: 80px;
+        align: center;
+        border: 0; }
+    .files-table .files-view-preview .ft-name, .files-table .files-view-preview .files-view-table .ft-size, .files-table .files-view-table .files-view-preview .ft-size, .files-table .files-view-preview .files-view-table .ft-time, .files-table .files-view-table .files-view-preview .ft-time, .files-table .files-view-preview .files-view-table .ft-logo, .files-table .files-view-table .files-view-preview .ft-logo, .files-table .files-view-preview .files-view-table .ft-label, .files-table .files-view-table .files-view-preview .ft-label, .files-table .files-view-preview .files-view-cell .ft-size, .files-table .files-view-cell .files-view-preview .ft-size, .files-table .files-view-preview .files-view-cell .ft-time, .files-table .files-view-cell .files-view-preview .ft-time {
+      display: table;
+      width: 100%;
+      height: 120px;
+      text-align: center;
+      overflow: hidden;
+      position: relative; }
+    .files-table .files-view-preview .ft-size, .files-table .files-view-preview .ft-time {
+      display: table;
+      height: 15px;
+      vertical-align: middle;
+      width: 100%;
+      color: #666;
+      font-size: 10px;
+      text-align: center; }
+    .files-table .files-view-preview .ft-logo {
+      height: 80px;
+      display: table-row;
+      vertical-align: middle;
+      width: 100%;
+      text-align: center; }
+    .files-table .files-view-preview .ft-label {
+      text-align: center;
+      display: table-cell;
+      vertical-align: middle;
+      font-size: 12px;
+      color: #333;
+      width: 100%;
+      word-break: break-word; }
+    .files-table .files-view-preview .ft-item-folder .ft-size:after {
+      content: 'Папка с файлами';
+      display: block; }
+    .files-table .files-view-preview .ft-item-selected, .files-table .files-view-preview .ft-item-selected:hover {
+      background-color: #beebff; }
+    .files-table .files-view-preview .logo {
+      background: url(../images/icons.png) -165px -5px;
+      width: 50px;
+      height: 55px;
+      display: inline-block;
+      margin-top: 10px; }
+    .files-table .files-view-preview .logo-folder {
+      background-position: 0 -5px; }
+    .files-table .files-view-preview .logo-doc, .files-table .files-view-preview .logo-docx, .files-table .files-view-preview .logo-rtf {
+      background-position: 0 -60px; }
+    .files-table .files-view-preview .logo-odt {
+      background-position: -220px -60px; }
+    .files-table .files-view-preview .logo-txt {
+      background-position: -220px -180px; }
+    .files-table .files-view-preview .logo-xls, .files-table .files-view-preview .logo-xlsx, .files-table .files-view-preview .logo-csv .logo-dbf {
+      background-position: -55px -60px; }
+    .files-table .files-view-preview .logo-ppt, .files-table .files-view-preview .logo-pptx, .files-table .files-view-preview .logo-pps {
+      background-position: -165px -120px; }
+    .files-table .files-view-preview .logo-gif, .files-table .files-view-preview .logo-tif, .files-table .files-view-preview .logo-tiff, .files-table .files-view-preview .logo-bmp, .files-table .files-view-preview .logo-cdr {
+      background-position: 0 -180px; }
+    .files-table .files-view-preview .logo-png {
+      background-position: -55px -120px; }
+    .files-table .files-view-preview .logo-jpg, .files-table .files-view-preview .logo-jpeg {
+      background-position: -110px -180px; }
+    .files-table .files-view-preview .logo-psd {
+      background-position: -220px -120px; }
+    .files-table .files-view-preview .logo-pdf {
+      background-position: -55px -180px; }
+    .files-table .files-view-preview .logo-php {
+      background-position: -110px -120px; }
+    .files-table .files-view-preview .logo-wav, .files-table .files-view-preview .logo-mp3 {
+      background-position: 0 -120px; }
+    .files-table .files-view-preview .logo-avi, .files-table .files-view-preview .logo-mpg, .files-table .files-view-preview .logo-mp4, .files-table .files-view-preview .logo-mpeg, .files-table .files-view-preview .logo-mov, .files-table .files-view-preview .logo-swf, .files-table .files-view-preview .logo-vob, .files-table .files-view-preview .logo-vid, .files-table .files-view-preview .logo-vcd, .files-table .files-view-preview .logo-wmv, .files-table .files-view-preview .logo-mkv
+    .logo-m4v, .files-table .files-view-preview .logo-flv, .files-table .files-view-preview .logo-dat {
+      background-position: -110px 0; }
+    .files-table .files-view-preview .logo-js {
+      background-position: -165px -60px; }
+    .files-table .files-view-preview .logo-css {
+      background-position: -110px -60px; }
+    .files-table .files-view-preview .logo-htm, .files-table .files-view-preview .logo-html {
+      background-position: -220px 0; }
+    .files-table .files-view-preview .logo-mdb {
+      background-position: -165px -180px; }
+    .files-table .files-view-preview .logo-zip, .files-table .files-view-preview .logo-rar, .files-table .files-view-preview .logo-bin, .files-table .files-view-preview .logo-7z, .files-table .files-view-preview .logo-cab, .files-table .files-view-preview .logo-gzip, .files-table .files-view-preview .logo-pak, .files-table .files-view-preview .logo-pkg,
+    .files-table .files-view-preview .logo-ppt, .files-table .files-view-preview .logo-rpm, .files-table .files-view-preview .logo-spl, .files-table .files-view-preview .logo-tar, .files-table .files-view-preview .logo-tar-gz, .files-table .files-view-preview .logo-tgz, .files-table .files-view-preview .logo-xar, .files-table .files-view-preview .logo-zipx {
+      background-position: -55px 0; }
+  .files-table .files-view-table {
+    display: table;
+    width: 100%; }
+    .files-table .files-view-table .ft-item, .files-table .files-view-table .ft-header {
+      display: table-row;
+      cursor: pointer;
+      height: 34px;
+      font-size: 14px; }
+    .files-table .files-view-table .ft-header {
+      display: table-row-group; }
+      .files-table .files-view-table .ft-header .ft-header-item {
+        display: table-cell;
+        height: 34px;
+        background-color: #efefef;
+        border-right: 1px solid #ccc;
+        border-left: 1px solid #fff;
+        vertical-align: middle;
+        color: #333;
+        padding-left: 10px;
+        position: relative; }
+        .files-table .files-view-table .ft-header .ft-header-item .ft-header-item-sort {
+          width: 13px;
+          height: 8px;
+          display: inline-block;
+          position: absolute;
+          right: 5px;
+          top: 10px; }
+          .files-table .files-view-table .ft-header .ft-header-item .ft-header-item-sort.sort-asc {
+            background: url(../images/arrows.png) 0 -9px; }
+          .files-table .files-view-table .ft-header .ft-header-item .ft-header-item-sort.sort-desc {
+            background: url(../images/arrows.png) 0 0; }
+        .files-table .files-view-table .ft-header .ft-header-item:last-of-type {
+          border-right: none; }
+    .files-table .files-view-table .ft-item:nth-child(odd) {
+      background-color: #f8f8f8; }
+    .files-table .files-view-table .ft-item:hover {
+      background-color: #e7f4f9; }
+    .files-table .files-view-table .ft-item.drop-hover {
+      background-color: #1474b8;
+      color: #ffffff; }
+    .files-table .files-view-table .ft-item-selected, .files-table .files-view-table .ft-item-selected:hover, .files-table .files-view-table .ft-item-selected:nth-child(odd) {
+      background-color: #beebff; }
+    .files-table .files-view-table .ft-thumb {
+      display: none; }
+    .files-table .files-view-table .ft-name, .files-table .files-view-table .ft-size, .files-table .files-view-table .ft-time, .files-table .files-view-table .ft-logo, .files-table .files-view-table .ft-label {
+      display: table-cell;
+      vertical-align: middle; }
+    .files-table .files-view-table .ft-size, .files-table .files-view-table .ft-time {
+      text-align: right;
+      padding-right: 10px; }
+    .files-table .files-view-table .ft-logo {
+      width: 28px; }
+    .files-table .files-view-table .ft-label {
+      height: 28px; }
+    .files-table .files-view-table .logo {
+      background: url(../images/icons.png) -5px -285px;
+      width: 20px;
+      height: 28px;
+      display: inline-block; }
+    .files-table .files-view-table .logo-folder {
+      background-position: -5px -235px; }
+    .files-table .files-view-table .logo-doc, .files-table .files-view-table .logo-docx, .files-table .files-view-table .logo-rtf {
+      background-position: -105px -235px; }
+    .files-table .files-view-table .logo-odt {
+      background-position: -105px -285px; }
+    .files-table .files-view-table .logo-txt {
+      background-position: -30px -285px; }
+    .files-table .files-view-table .logo-xls, .files-table .files-view-table .logo-xlsx, .files-table .files-view-table .logo-csv .logo-dbf {
+      background-position: -155px -235px; }
+    .files-table .files-view-table .logo-ppt, .files-table .files-view-table .logo-pptx, .files-table .files-view-table .logo-pps {
+      background-position: -130px -235px; }
+    .files-table .files-view-table .logo-gif, .files-table .files-view-table .logo-tif, .files-table .files-view-table .logo-tiff, .files-table .files-view-table .logo-bmp, .files-table .files-view-table .logo-cdr {
+      background-position: -80px -260px; }
+    .files-table .files-view-table .logo-png {
+      background-position: -80px -235px; }
+    .files-table .files-view-table .logo-jpg, .files-table .files-view-table .logo-jpeg {
+      background-position: -130px -260px; }
+    .files-table .files-view-table .logo-psd {
+      background-position: -180px -235px; }
+    .files-table .files-view-table .logo-pdf {
+      background-position: -155px -260px; }
+    .files-table .files-view-table .logo-php {
+      background-position: -55px -235px; }
+    .files-table .files-view-table .logo-wav, .files-table .files-view-table .logo-mp3 {
+      background-position: -30px -260px; }
+    .files-table .files-view-table .logo-avi, .files-table .files-view-table .logo-mpg, .files-table .files-view-table .logo-mp4, .files-table .files-view-table .logo-mpeg, .files-table .files-view-table .logo-mov, .files-table .files-view-table .logo-swf, .files-table .files-view-table .logo-vob, .files-table .files-view-table .logo-vid, .files-table .files-view-table .logo-vcd, .files-table .files-view-table .logo-wmv, .files-table .files-view-table .logo-mkv
+    .logo-m4v, .files-table .files-view-table .logo-flv, .files-table .files-view-table .logo-dat {
+      background-position: -5px -260px; }
+    .files-table .files-view-table .logo-js {
+      background-position: -180px -260px; }
+    .files-table .files-view-table .logo-css {
+      background-position: -30px -285px; }
+    .files-table .files-view-table .logo-htm, .files-table .files-view-table .logo-html {
+      background-position: -105px -260px; }
+    .files-table .files-view-table .logo-mdb {
+      background-position: -55px -285px; }
+    .files-table .files-view-table .logo-zip, .files-table .files-view-table .logo-rar, .files-table .files-view-table .logo-bin, .files-table .files-view-table .logo-7z, .files-table .files-view-table .logo-cab, .files-table .files-view-table .logo-gzip, .files-table .files-view-table .logo-pak, .files-table .files-view-table .logo-pkg,
+    .files-table .files-view-table .logo-ppt, .files-table .files-view-table .logo-rpm, .files-table .files-view-table .logo-spl, .files-table .files-view-table .logo-tar, .files-table .files-view-table .logo-tar-gz, .files-table .files-view-table .logo-tgz, .files-table .files-view-table .logo-xar, .files-table .files-view-table .logo-zipx {
+      background-position: -30px -235px; }
+  .files-table .files-view-cell {
+    width: 100%; }
+    .files-table .files-view-cell .ft-header {
+      display: none; }
+    .files-table .files-view-cell .ft-item {
+      display: block;
+      float: left;
+      width: 300px;
+      height: 60px;
+      font-size: 14px;
+      overflow: hidden;
+      margin: 5px 10px;
+      padding: 3px;
+      cursor: pointer; }
+      .files-table .files-view-cell .ft-item:hover {
+        background-color: #e7f4f9; }
+      .files-table .files-view-cell .ft-item.drop-hover {
+        background-color: #1474b8;
+        color: #ffffff; }
+    .files-table .files-view-cell .ft-name, .files-table .files-view-cell .files-view-table .ft-logo, .files-table .files-view-table .files-view-cell .ft-logo, .files-table .files-view-cell .files-view-table .ft-label, .files-table .files-view-table .files-view-cell .ft-label, .files-table .files-view-cell .ft-size, .files-table .files-view-cell .ft-time {
+      display: block; }
+    .files-table .files-view-cell .ft-thumb {
+      display: none; }
+    .files-table .files-view-cell .ft-size, .files-table .files-view-cell .ft-time {
+      font-size: 12px;
+      color: #666; }
+    .files-table .files-view-cell .ft-logo {
+      width: 55px;
+      height: 60px;
+      display: block;
+      float: left; }
+    .files-table .files-view-cell .ft-item-folder .ft-size:after {
+      content: 'Папка с файлами';
+      display: block; }
+    .files-table .files-view-cell .ft-item-selected, .files-table .files-view-cell .ft-item-selected:hover {
+      background-color: #beebff; }
+    .files-table .files-view-cell .logo {
+      background: url(../images/icons.png) -165px -5px;
+      width: 50px;
+      height: 55px;
+      display: inline-block; }
+    .files-table .files-view-cell .logo-folder {
+      background-position: 0 -5px; }
+    .files-table .files-view-cell .logo-doc, .files-table .files-view-cell .logo-docx, .files-table .files-view-cell .logo-rtf {
+      background-position: 0 -60px; }
+    .files-table .files-view-cell .logo-odt {
+      background-position: -220px -60px; }
+    .files-table .files-view-cell .logo-txt {
+      background-position: -220px -180px; }
+    .files-table .files-view-cell .logo-xls, .files-table .files-view-cell .logo-xlsx, .files-table .files-view-cell .logo-csv .logo-dbf {
+      background-position: -55px -60px; }
+    .files-table .files-view-cell .logo-ppt, .files-table .files-view-cell .logo-pptx, .files-table .files-view-cell .logo-pps {
+      background-position: -165px -120px; }
+    .files-table .files-view-cell .logo-gif, .files-table .files-view-cell .logo-tif, .files-table .files-view-cell .logo-tiff, .files-table .files-view-cell .logo-bmp, .files-table .files-view-cell .logo-cdr {
+      background-position: 0 -180px; }
+    .files-table .files-view-cell .logo-png {
+      background-position: -55px -120px; }
+    .files-table .files-view-cell .logo-jpg, .files-table .files-view-cell .logo-jpeg {
+      background-position: -110px -180px; }
+    .files-table .files-view-cell .logo-psd {
+      background-position: -220px -120px; }
+    .files-table .files-view-cell .logo-pdf {
+      background-position: -55px -180px; }
+    .files-table .files-view-cell .logo-php {
+      background-position: -110px -120px; }
+    .files-table .files-view-cell .logo-wav, .files-table .files-view-cell .logo-mp3 {
+      background-position: 0 -120px; }
+    .files-table .files-view-cell .logo-avi, .files-table .files-view-cell .logo-mpg, .files-table .files-view-cell .logo-mp4, .files-table .files-view-cell .logo-mpeg, .files-table .files-view-cell .logo-mov, .files-table .files-view-cell .logo-swf, .files-table .files-view-cell .logo-vob, .files-table .files-view-cell .logo-vid, .files-table .files-view-cell .logo-vcd, .files-table .files-view-cell .logo-wmv, .files-table .files-view-cell .logo-mkv
+    .logo-m4v, .files-table .files-view-cell .logo-flv, .files-table .files-view-cell .logo-dat {
+      background-position: -110px 0; }
+    .files-table .files-view-cell .logo-js {
+      background-position: -165px -60px; }
+    .files-table .files-view-cell .logo-css {
+      background-position: -110px -60px; }
+    .files-table .files-view-cell .logo-htm, .files-table .files-view-cell .logo-html {
+      background-position: -220px 0; }
+    .files-table .files-view-cell .logo-mdb {
+      background-position: -165px -180px; }
+    .files-table .files-view-cell .logo-zip, .files-table .files-view-cell .logo-rar, .files-table .files-view-cell .logo-bin, .files-table .files-view-cell .logo-7z, .files-table .files-view-cell .logo-cab, .files-table .files-view-cell .logo-gzip, .files-table .files-view-cell .logo-pak, .files-table .files-view-cell .logo-pkg,
+    .files-table .files-view-cell .logo-ppt, .files-table .files-view-cell .logo-rpm, .files-table .files-view-cell .logo-spl, .files-table .files-view-cell .logo-tar, .files-table .files-view-cell .logo-tar-gz, .files-table .files-view-cell .logo-tgz, .files-table .files-view-cell .logo-xar, .files-table .files-view-cell .logo-zipx {
+      background-position: -55px 0; }
+
+.fm-panel {
+  vertical-align: top;
+  width: 15%;
+  min-width: 150px;
+  max-width: 200px;
+  background-color: #efefef;
+  border-left: 1px solid #ddd;
+  padding: 0 10px 10px; }
+
+.splitter_panel .vsplitter {
+  background-color: #ddd;
+  z-index: 0; }
+
+.jstree-anchor.drop-hover {
+  background-color: #1474b8;
+  color: #ffffff; }
+
+.fm-image-manager {
+  width: 100%; }
+  .fm-image-manager .fm-image-container {
+    width: 70%;
+    height: 500px;
+    float: left;
+    overflow: auto;
+    padding: 10px;
+    background-color: #333;
+    text-align: center; }
+    .fm-image-manager .fm-image-container .fm-image-wrapper {
+      display: inline-block;
+      vertical-align: middle;
+      zoom: 1; }
+    .fm-image-manager .fm-image-container .fm-image-helper {
+      display: inline-block;
+      height: 100%;
+      width: 0px;
+      vertical-align: middle;
+      zoom: 1; }
+  .fm-image-manager .fm-image-toolbar {
+    width: 30%;
+    padding-left: 20px;
+    float: right; }
+
+/*# sourceMappingURL=styles.css.map */

@@ -1,0 +1,520 @@
+@CHARSET "UTF-8";
+body, html, .fileManager {
+	height: 100%;
+	width: 100%;
+}
+.fm-header {
+	width: 100%;
+	height: 40px;
+	background-color: #efefef;
+	border-bottom: 1px solid #ddd;
+	z-index:1;
+	padding-top: 3px;
+
+	.btn {
+		background-color: #f9f9f9;
+	
+		&.active {
+			background-color: #cccccc;	
+		}
+	}
+}
+.fm-footer {
+	height: 30px;
+	background-color: #efefef;
+	border-top: 1px solid #ddd;
+	width: 100%;
+	z-index:1;
+}
+.fm-folders {
+	padding: 10px;
+	vertical-align: top;
+	border-right: 3px solid #ddd;
+	min-width: 250px;
+	width: 20%;
+	max-width: 350px;
+}
+.fm-files {
+	vertical-align: top;
+	width: 65%;
+	padding: 10px;
+}
+.files-table {
+	max-height: 100%;
+	overflow: auto;	
+	
+	.ft-content {
+		display: table-row-group;
+	}
+	.files-view-preview {
+		width: 100%;
+		
+		.ft-header {
+			display: none;
+		}
+		.ft-item {
+			display: block;
+			float: left;
+			width: 110px;
+			height: 170px;
+			font-size: 14px;
+			overflow: hidden;
+			margin: 10px;
+			padding: 7px;
+			cursor: pointer;
+			border: 1px solid #dedede;
+			text-align: center;
+			background-color:#fff;
+			
+			&:hover {
+				background-color: #e7f4f9;
+			}
+			&.drop-hover {
+				background-color: #1474b8;
+				color: #ffffff;
+			}
+		}
+		.ft-thumb {
+			position: absolute;
+			height: 80px;
+			display: table-row;
+			width: 100%;
+			top: 0;
+			left: 0;
+			
+			IMG {
+				width: 100px;
+				height: 80px;
+				align:center;
+				border: 0;
+			}
+		}
+		.ft-name {
+			display: table;
+			width: 100%;
+			height: 120px;
+			text-align: center;
+			overflow: hidden;
+			position: relative;			
+		}
+		.ft-size, .ft-time {
+			display: table;
+			height: 15px;
+			vertical-align: middle;
+			width: 100%;
+			color: #666;
+			font-size: 10px;
+			text-align: center;
+		}
+		.ft-logo {
+			height: 80px;
+			display: table-row;
+			vertical-align: middle;
+			width: 100%;
+			text-align: center;
+		}
+		
+		.ft-label {
+			text-align: center;
+			display: table-cell;
+			vertical-align: middle;
+			font-size:12px;
+			color: #333;
+			width: 100%;
+			word-break:break-word; 			
+		}
+		
+		.ft-item-folder .ft-size:after {
+			content: 'Папка с файлами';
+			display: block;
+		}
+		
+		.ft-item-selected, .ft-item-selected:hover {
+			background-color: #beebff;
+		}
+		
+		.logo {
+			background: url(../images/icons.png) -165px -5px;
+			width: 50px;
+			height: 55px;
+			display: inline-block;
+			margin-top: 10px;
+		}
+		.logo-folder {
+			background-position: 0 -5px;
+		}
+		.logo-doc, .logo-docx, .logo-rtf {
+			background-position: 0 -60px;
+		}
+		.logo-odt {
+			background-position: -220px -60px;
+		}
+		.logo-txt {
+			background-position: -220px -180px;
+		}
+		.logo-xls, .logo-xlsx, .logo-csv .logo-dbf{
+			background-position: -55px -60px;
+		}
+		.logo-ppt, .logo-pptx, .logo-pps {
+			background-position: -165px -120px;
+		}
+		.logo-gif, .logo-tif, .logo-tiff, .logo-bmp, .logo-cdr {
+			background-position: 0 -180px;
+		}
+		.logo-png {
+			background-position: -55px -120px;
+		}
+		.logo-jpg, .logo-jpeg {
+			background-position: -110px -180px;
+		}
+		.logo-psd {
+			background-position: -220px -120px;
+		}
+		.logo-pdf {
+			background-position: -55px -180px;
+		}
+		.logo-php {
+			background-position: -110px -120px;
+		}
+		.logo-wav, .logo-mp3 {
+			background-position: 0 -120px;
+		}
+		.logo-avi, .logo-mpg, .logo-mp4, .logo-mpeg, .logo-mov, .logo-swf, .logo-vob, .logo-vid, .logo-vcd, .logo-wmv, .logo-mkv
+		.logo-m4v, .logo-flv, .logo-dat {
+			background-position: -110px 0;
+		}
+		.logo-js {
+			background-position: -165px -60px;
+		}
+		.logo-css {
+			background-position: -110px -60px;
+		}
+		.logo-htm, .logo-html {
+			background-position: -220px 0;
+		}
+		.logo-mdb {
+			background-position: -165px -180px;
+		}
+		.logo-zip, .logo-rar, .logo-bin, .logo-7z, .logo-cab, .logo-gzip, .logo-pak, .logo-pkg, 
+		.logo-ppt, .logo-rpm, .logo-spl, .logo-tar, .logo-tar-gz, .logo-tgz, .logo-xar, .logo-zipx {
+			background-position: -55px 0;
+		}
+	}
+	.files-view-table {
+		display: table;
+		width: 100%;	
+	
+		.ft-item, .ft-header{
+			display: table-row;
+			cursor: pointer;
+			height: 34px;
+			font-size: 14px;
+		}
+		
+		.ft-header {
+			display: table-row-group;
+			
+			.ft-header-item {
+				display: table-cell;
+				height: 34px;
+				background-color:#efefef;
+				border-right: 1px solid #ccc;
+				border-left: 1px solid #fff;
+				vertical-align:middle;
+				color: #333;
+				padding-left: 10px;
+				position: relative;
+			
+				.ft-header-item-sort {
+					width:13px;
+					height: 8px;
+					display: inline-block;
+					position: absolute;
+					right: 5px;
+					top: 10px;
+				
+					&.sort-asc {
+						background: url(../images/arrows.png) 0 -9px;
+					}
+					&.sort-desc {
+						background: url(../images/arrows.png) 0 0;
+					}
+				}
+				
+				&:last-of-type {
+					border-right: none;
+				}
+			}
+		}
+		
+		.ft-item {
+			&:nth-child(odd) {
+				background-color: #f8f8f8;
+			}
+			&:hover {
+				background-color: #e7f4f9;
+			}
+			&.drop-hover {
+				background-color: #1474b8;
+				color: #ffffff;
+			}			
+		}
+		
+		.ft-item-selected, .ft-item-selected:hover, .ft-item-selected:nth-child(odd) {
+			background-color: #beebff;
+		}
+		
+		.ft-thumb {
+			display: none;
+		}
+		.ft-name {
+			display: table-cell;
+			vertical-align: middle;
+		}
+		.ft-size, .ft-time {
+			@extend .ft-name;
+			text-align: right;
+			padding-right: 10px;
+		}
+		.ft-logo {
+			@extend .ft-name;
+			width: 28px;
+		}
+		.ft-label {
+			@extend .ft-name;
+			height: 28px;	
+		}
+		
+		.logo {
+			background: url(../images/icons.png) -5px -285px;
+			width: 20px;
+			height: 28px;
+			display: inline-block;	
+		}
+		.logo-folder {
+			background-position: -5px -235px;
+		}
+		.logo-doc, .logo-docx, .logo-rtf {
+			background-position: -105px -235px;
+		}
+		.logo-odt {
+			background-position: -105px -285px;
+		}
+		.logo-txt {
+			background-position: -30px -285px;
+		}
+		.logo-xls, .logo-xlsx, .logo-csv .logo-dbf{
+			background-position: -155px -235px;
+		}
+		.logo-ppt, .logo-pptx, .logo-pps {
+			background-position: -130px -235px;
+		}
+		.logo-gif, .logo-tif, .logo-tiff, .logo-bmp, .logo-cdr {
+			background-position: -80px -260px;
+		}
+		.logo-png {
+			background-position: -80px -235px;
+		}
+		.logo-jpg, .logo-jpeg {
+			background-position: -130px -260px;
+		}
+		.logo-psd {
+			background-position: -180px -235px;
+		}
+		.logo-pdf {
+			background-position: -155px -260px;
+		}
+		.logo-php {
+			background-position: -55px -235px;
+		}
+		.logo-wav, .logo-mp3 {
+			background-position: -30px -260px;
+		}
+		.logo-avi, .logo-mpg, .logo-mp4, .logo-mpeg, .logo-mov, .logo-swf, .logo-vob, .logo-vid, .logo-vcd, .logo-wmv, .logo-mkv
+		.logo-m4v, .logo-flv, .logo-dat {
+			background-position: -5px -260px;
+		}
+		.logo-js {
+			background-position: -180px -260px;
+		}
+		.logo-css {
+			background-position: -30px -285px;
+		}
+		.logo-htm, .logo-html {
+			background-position: -105px -260px;
+		}
+		.logo-mdb {
+			background-position: -55px -285px;
+		}
+		.logo-zip, .logo-rar, .logo-bin, .logo-7z, .logo-cab, .logo-gzip, .logo-pak, .logo-pkg, 
+		.logo-ppt, .logo-rpm, .logo-spl, .logo-tar, .logo-tar-gz, .logo-tgz, .logo-xar, .logo-zipx {
+			background-position: -30px -235px;
+		}
+	}
+	.files-view-cell {
+		width: 100%;	
+	
+		.ft-header {
+			display: none;
+		}
+		.ft-item {
+			display: block;
+			float: left;
+			width: 300px;
+			height: 60px;
+			font-size: 14px;
+			overflow: hidden;
+			margin: 5px 10px;
+			padding:3px;
+			cursor: pointer;
+		
+			&:hover {
+				background-color: #e7f4f9;
+			}
+			&.drop-hover {
+				background-color: #1474b8;
+				color: #ffffff;
+			}			
+		}
+		.ft-name {
+			display: block;
+		}
+		.ft-thumb {
+			display: none;
+		}
+		.ft-size, .ft-time {
+			@extend .ft-name;
+			font-size:12px;
+			color: #666;
+		}
+		.ft-logo {
+			width: 55px;
+			height: 60px;
+			display: block;
+			float:left;
+		}
+		
+		.ft-item-folder .ft-size:after {
+			content: 'Папка с файлами';
+			display: block;
+		}
+		
+		.ft-item-selected, .ft-item-selected:hover {
+			background-color: #beebff;
+		}
+		
+		.logo {
+			background: url(../images/icons.png) -165px -5px;
+			width: 50px;
+			height: 55px;
+			display: inline-block;	
+		}
+		.logo-folder {
+			background-position: 0 -5px;
+		}
+		.logo-doc, .logo-docx, .logo-rtf {
+			background-position: 0 -60px;
+		}
+		.logo-odt {
+			background-position: -220px -60px;
+		}
+		.logo-txt {
+			background-position: -220px -180px;
+		}
+		.logo-xls, .logo-xlsx, .logo-csv .logo-dbf{
+			background-position: -55px -60px;
+		}
+		.logo-ppt, .logo-pptx, .logo-pps {
+			background-position: -165px -120px;
+		}
+		.logo-gif, .logo-tif, .logo-tiff, .logo-bmp, .logo-cdr {
+			background-position: 0 -180px;
+		}
+		.logo-png {
+			background-position: -55px -120px;
+		}
+		.logo-jpg, .logo-jpeg {
+			background-position: -110px -180px;
+		}
+		.logo-psd {
+			background-position: -220px -120px;
+		}
+		.logo-pdf {
+			background-position: -55px -180px;
+		}
+		.logo-php {
+			background-position: -110px -120px;
+		}
+		.logo-wav, .logo-mp3 {
+			background-position: 0 -120px;
+		}
+		.logo-avi, .logo-mpg, .logo-mp4, .logo-mpeg, .logo-mov, .logo-swf, .logo-vob, .logo-vid, .logo-vcd, .logo-wmv, .logo-mkv
+		.logo-m4v, .logo-flv, .logo-dat {
+			background-position: -110px 0;
+		}
+		.logo-js {
+			background-position: -165px -60px;
+		}
+		.logo-css {
+			background-position: -110px -60px;
+		}
+		.logo-htm, .logo-html {
+			background-position: -220px 0;
+		}
+		.logo-mdb {
+			background-position: -165px -180px;
+		}
+		.logo-zip, .logo-rar, .logo-bin, .logo-7z, .logo-cab, .logo-gzip, .logo-pak, .logo-pkg, 
+		.logo-ppt, .logo-rpm, .logo-spl, .logo-tar, .logo-tar-gz, .logo-tgz, .logo-xar, .logo-zipx {
+			background-position: -55px 0;
+		}
+	}
+}
+.fm-panel {
+	vertical-align: top;
+	width: 15%;
+	min-width: 150px;
+	max-width: 200px;
+	background-color: #efefef;
+	border-left: 1px solid #ddd;
+	padding:0 10px 10px;
+}
+.splitter_panel .vsplitter {
+	background-color: #ddd;
+	z-index: 0;
+}
+.jstree-anchor.drop-hover {
+	background-color: #1474b8;
+	color: #ffffff;
+}
+.fm-image-manager {
+	width: 100%;
+	
+	.fm-image-container{
+		width: 70%;
+	    height: 500px;
+		float: left;
+		overflow: auto;
+		padding: 10px;
+		background-color: #333;
+		text-align: center;
+	
+		.fm-image-wrapper {
+			display: inline-block;
+  			vertical-align: middle;
+  			zoom: 1;
+		}
+		.fm-image-helper {
+			display: inline-block;
+			height: 100%;
+			width: 0px;
+			vertical-align: middle;
+			zoom: 1;
+		}
+	}
+	.fm-image-toolbar {
+		width: 30%;
+		padding-left: 20px;
+		float: right;
+	}
+}
