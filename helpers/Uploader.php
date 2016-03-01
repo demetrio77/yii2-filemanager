@@ -178,15 +178,9 @@ class Uploader extends Object
 		
 		return [
 			'status' => 'success',
-			'file' => [
-				'name' => $name,
-				'isFolder' => false,
-				'alias' => $this->Alias->id,
-				'size' => $File->size,
-				'ext' =>  $File->extension,
-				'time' => $File->time,
-				'tmb' => $File->thumb->exists
-			]
+			'file' => $File->item(),
+			'url'=>$File->url,
+			'path'=>ltrim($File->path, DIRECTORY_SEPARATOR)
 		];
 	}
 	
@@ -210,15 +204,9 @@ class Uploader extends Object
 			
 			return [
 				'status' => 'success',
-				'file' => [
-					'name' => $name,
-					'isFolder' => false,
-					'alias' => $this->Alias->id,
-					'size' => $File->size,
-					'ext' =>  $File->extension,
-					'time' => $File->time,
-					'tmb' => $File->thumb->exists
-				]
+				'file' => $File->item(),
+				'url'=>$File->url,
+				'path'=>ltrim($File->path, DIRECTORY_SEPARATOR)
 			];
 		}
 		

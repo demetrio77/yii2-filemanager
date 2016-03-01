@@ -18,6 +18,7 @@
     	CKEditor: {}, //instance: 'CKEditor',langCode: 'ru',CKEditorFuncNum: 0
         //filterSelector: undefined
     	connector : '',
+    	configuration: 'default',
     	fileName : '',
     	lazyLoadCnt : 75
     };
@@ -237,7 +238,7 @@
                 			$.ajax({
 	                			async: false,
 	                			method: 'get',
-	                			url: $this.settings.connector + '&action=data&options[alias]=' + item.alias + '&options[path]='+item.path(),
+	                			url: $this.settings.connector + '?action=data&options[configuration]='+$this.settings.configuration+'&options[alias]=' + item.alias + '&options[path]='+item.path(),
 	                			dataType: 'json'
 	                		}).done( function(json){
 	                			self._loadItems(item, json);
@@ -250,7 +251,7 @@
                 		$.ajax({
                 			async: false,
                 			method: 'get',
-                			url: $this.settings.connector + '&action=data&options[file]='+file,
+                			url: $this.settings.connector + '?action=data&options[configuration]='+$this.settings.configuration+'&options[file]='+file,
                 			dataType: 'json'
                 		}).done( function(json) {
                 			self.error = !json.found;
@@ -408,7 +409,7 @@
                 		$.ajax({
                 			async: false,
                 			method: 'post',
-                			url: $this.settings.connector + '&action=refresh&options=1',
+                			url: $this.settings.connector + '?action=refresh&options[configuration]='+$this.settings.configuration,
                 			data: {folders: toRefresh, _csrf: csrfToken},
                 			dataType: 'json'
                 		})
@@ -1199,38 +1200,6 @@
                 				    </div></div>\
                 				</div>\
                 			</div>';
-                					
-                					
-                					/*
-                					
-                					
-                					
-                					
-                					
-                					
-                					
-                					
-                					
-                					<div style="margin-top: 10px; width: 100%;" class="btn-group-vertical btn-group-sm" role="group" aria-label="">\
-	                				  <button type="button" class="btn btn-default action-mkdir">\
-	                				  	<span class="glyphicon glyphicon-move"></span> Изменить размеры\
-	                				  </button>\
-	                				  <button type="button" class="btn btn-default action-mkdir">\
-	                				  	<span class="glyphicon glyphicon-scissors"></span> Обрезать\
-	                				  </button>\
-                					  <button type="button" class="btn btn-default action-mkdir">\
-	                				  	<span class="glyphicon glyphicon-retweet"></span> Повернуть\
-	                				  </button>\
-	                				  <button type="button" class="btn btn-default action-mkdir">\
-	                				  	<span class="glyphicon glyphicon-copyright-mark"></span> Добавить водный знак\
-	                				  </button>\
-	                				  <button type="button" style="display: none" class="btn btn-default action-mkdir">\
-	                				  	<span class="glyphicon glyphicon-remove"></span> Отменить\
-	                				  </button>\
-                					</div>\
-                					<div class="fm-image-toolbar-options"></div>\
-                				</div>\
-                			</div>';*/
                 	};
                 	
                 	this.refreshItem = function(id) {
@@ -1389,7 +1358,7 @@
                 				var item = model.data[view.current]; 
                 				
                 				this.uploadPanel.fileapi({
-                					url: $this.settings.connector + '&action=upload&options[alias]=' + item.alias + '&options[path]='+item.path(),
+                					url: $this.settings.connector + '?action=upload&options[alias]=' + item.alias + '&options[path]='+item.path(),
                 					multiple: false,
                 					maxSize: 250 * FileAPI.MB,
                 					autoUpload: false,
@@ -1510,7 +1479,7 @@
 
 	             	                var interval = setInterval(function() {
              	                      $.ajax({
-             	                        async:true, dataType:'json',url: $this.settings.connector + '&action=progress&options[tmp]='+tmp,
+             	                        async:true, dataType:'json',url: $this.settings.connector + '?action=progress&options[tmp]='+tmp,
              	                        success:function(result){
              	                        	if (result.total) {
              	                        		var percent = Math.round(result.get*100/result.total);
@@ -1525,7 +1494,7 @@
              	                    $.ajax({
              	                       data: {link:link,filename:filename,_csrf: csrfToken},
              	                       async:true, dataType:'json',method:'POST',
-             	                       url: $this.settings.connector + '&action=link&options[alias]=' + item.alias + '&options[path]='+item.path()+'&options[tmp]='+tmp,
+             	                       url: $this.settings.connector + '?action=link&options[alias]=' + item.alias + '&options[path]='+item.path()+'&options[tmp]='+tmp,
              	                       success:function(result){
              	                           clearInterval(interval);
              	                           me.setProgress(100);
@@ -1588,7 +1557,7 @@
                 		
                 		if (item.getAlias().rename && item.pid>0) {
 	            			view.modal.dkmodal({
-	                			url: $this.settings.connector+'&action=rename&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
+	                			url: $this.settings.connector+'?action=rename&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
 	                			title: 'Переименование '+(item.isFolder?'папки':'файла'),
 	                			afterSave: function(json){
 	                				if (json.status=='success') {
@@ -1613,7 +1582,7 @@
 	                			buttons: [
 	                			   {
 	                				   type: 'submit',
-	                				   path: $this.settings.connector+'&action=rename&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
+	                				   path: $this.settings.connector+'?action=rename&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
 	                				   loading:true,
 	                				   caption:'Переименовать'
 	                			   },
@@ -1629,7 +1598,7 @@
                 		var item = model.data[id];
                 		if (item!==undefined && item.getAlias().mkdir && item.isFolder) {
                 			view.modal.dkmodal({
-	                			url: $this.settings.connector+'&action=mkdir&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
+	                			url: $this.settings.connector+'?action=mkdir&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
 	                			title: 'Новая папка',
 	                			afterSave: function(json){
                 					var res = model.mkdir(id, json.name);
@@ -1646,7 +1615,7 @@
 	                			buttons: [
 	                			   {
 	                				   type: 'submit',
-	                				   path: $this.settings.connector+'&action=mkdir&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
+	                				   path: $this.settings.connector+'?action=mkdir&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
 	                				   loading:true,
 	                				   caption:'Создать'
 	                			   },
@@ -1662,7 +1631,7 @@
                 		var item = model.data[id];
                 		if (item!==undefined && item.getAlias().remove && item.pid>0) {
                 			view.modal.dkmodal({
-	                			url: $this.settings.connector+'&action=delete&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
+	                			url: $this.settings.connector+'?action=delete&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
 	                			title: 'Удаление '+(item.isFolder?'папки':'файла'),
 	                			afterSave: function(json){
                 					if (item.isFolder) {
@@ -1693,7 +1662,7 @@
 	                			buttons: [
 	                			   {
 	                				   type: 'submit',
-	                				   path: $this.settings.connector+'&action=delete&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
+	                				   path: $this.settings.connector+'?action=delete&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
 	                				   loading:true,
 	                				   caption:'Да, удалить'
 	                			   },
@@ -1737,7 +1706,7 @@
                 			$.ajax({
                 				async: false,
                     			method: 'post',
-                    			url: $this.settings.connector + '&action=paste&options[type]='+op,
+                    			url: $this.settings.connector + '?action=paste&options[type]='+op,
                     			data: {
                     				target : {
                     					alias: res.itemIn.alias,
@@ -1778,7 +1747,7 @@
                 		var itemPaste = res.itemPaste;
                 		
                 		view.modal.dkmodal({
-                			url:$this.settings.connector + '&action=existrename&options[target][alias]='+encodeURIComponent(itemIn.alias)+'&options[target][path]='+encodeURIComponent(itemIn.path())+'&options[object][alias]='+encodeURIComponent(itemPaste.alias)+'&options[object][path]='+encodeURIComponent(itemPaste.path()),
+                			url:$this.settings.connector + '?action=existrename&options[target][alias]='+encodeURIComponent(itemIn.alias)+'&options[target][path]='+encodeURIComponent(itemIn.path())+'&options[object][alias]='+encodeURIComponent(itemPaste.alias)+'&options[object][path]='+encodeURIComponent(itemPaste.path()),
                 			title:'Файл или папка с таким именем уже существуют',
                 			afterSave:function(json) {
                 				if (json.status=='success'){
@@ -1793,7 +1762,7 @@
                 			buttons: [
                 				{
                 				   type: 'submit',
-                				   path: $this.settings.connector+'&action=paste&options[type]='+res.op,
+                				   path: $this.settings.connector+'?action=paste&options[type]='+res.op,
                 				   loading:true,
                 				   caption:'Сохранить',
                 			   },
@@ -2088,7 +2057,7 @@
                 				this.process = function(options) {
                 					options['_csrf'] = csrfToken;
                 					$.ajax({
-                						url: $this.settings.connector + '&action=image&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias)+'&options[cnt]='+me.cnt,
+                						url: $this.settings.connector + '?action=image&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias)+'&options[cnt]='+me.cnt,
                 						data: options,
                 						dataType: 'json',
                 						method: 'post',
@@ -2125,7 +2094,7 @@
                 					}
                 					
                 					$.ajax({
-                						url: $this.settings.connector + '&action=saveimage&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
+                						url: $this.settings.connector + '?action=saveimage&options[path]='+encodeURIComponent(item.path())+'&options[alias]='+encodeURIComponent(item.alias),
                 						data: {_csrf: csrfToken, newName: newName, cnt: me.cnt},
                 						dataType: 'json',
                 						method: 'post',

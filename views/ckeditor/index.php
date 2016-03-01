@@ -10,7 +10,8 @@ $this->registerJs("
 			langCode: '$langCode',
 			CKEditorFuncNum: '$CKEditorFuncNum'
 		},
-		connector: '".Url::toRoute(['connector/', 'configuration' => $configuration])."'
+		connector: '".Url::toRoute(['connector/'])."',
+		configuration: '$configuration'
 	});
 		
 ", View::POS_READY);

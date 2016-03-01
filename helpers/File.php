@@ -72,7 +72,7 @@ class File extends Model
 	{
 		return [
 			'name' => $this->filename,
-			'isFolder' => false,
+			'isFolder' => $this->isFolder,
 			'alias' => $this->aliasId,
 			'size' => $this->size,
 			'ext' =>  mb_strtolower($this->extension),

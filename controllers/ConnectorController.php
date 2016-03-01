@@ -12,51 +12,54 @@ use demetrio77\manager\models\RenameModel;
 use demetrio77\manager\models\MkdirModel;
 use demetrio77\manager\helpers\Uploader;
 use demetrio77\manager\helpers\Image;
+use yii\helpers\ArrayHelper;
+use yii\helpers\FileHelper;
 
 class ConnectorController extends BaseController
 {
-	public function actionIndex($action, array $options, $configuration = 'default')
+	public function actionIndex($action, array $options)
 	{
 		switch ($action) {
 			case 'data': 
-				return $this->_dataAction( $configuration, $options );
+				return $this->_dataAction($options );
 			case 'rename':
-				return $this->_renameAction( $configuration, $options);
+				return $this->_renameAction($options);
 			case 'refresh':
-				return $this->_refreshAction( $configuration );
+				return $this->_refreshAction( $options );
 			case 'mkdir':
-				return $this->_mkdirAction( $configuration, $options);
+				return $this->_mkdirAction($options);
 			case 'delete':
-				return $this->_deleteAction( $configuration, $options);
+				return $this->_deleteAction($options);
 			case 'paste':
-				return $this->_pasteAction($configuration, $options);
+				return $this->_pasteAction($options);
 			case 'existrename':
-				return $this->_existrenameAction($configuration, $options);
+				return $this->_existrenameAction($options);
 			case 'link':
-				return $this->_linkAction($configuration, $options);
+				return $this->_linkAction($options);
 			case 'progress':
-				return $this->_progressAction($configuration, $options);
+				return $this->_progressAction($options);
 			case 'upload':
-				return $this->_uploadAction($configuration, $options);
+				return $this->_uploadAction($options);
 			case 'image': 
-				return $this->_imageAction($configuration, $options);
+				return $this->_imageAction($options);
 			case 'saveimage':
-				return $this->_saveImageAction($configuration, $options);
+				return $this->_saveImageAction($options);
 		}
 	}
 	
-	private function _dataAction( $configuration, $options) 
+	private function _dataAction( $options) 
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
 		$file = isset($options['file']) ? $options['file'] : '';
+		$configuration = isset($options['configuration']) ? $options['configuration'] : 'default';
 		
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		
 		return $this->getData($configuration, $alias,$path,  $file);
 	}
 	
-	private function _renameAction($configuration, $options)
+	private function _renameAction($options)
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
@@ -87,7 +90,7 @@ class ConnectorController extends BaseController
 		}
 	}
 	
-	private function _mkdirAction($configuration, $options)
+	private function _mkdirAction($options)
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
@@ -116,7 +119,7 @@ class ConnectorController extends BaseController
 		}
 	}
 	
-	private function _deleteAction($configuration, $options)
+	private function _deleteAction($options)
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
@@ -211,8 +214,9 @@ class ConnectorController extends BaseController
 		}
 	}
 	
-	private function _refreshAction( $configuration )
+	private function _refreshAction()
 	{
+		$configuration = isset($options['configuration']) ? $options['configuration'] : 'default';
 		$folders = Yii::$app->request->post('folders');
 		$result = [];
 		foreach ($folders as $folder) {
@@ -228,7 +232,7 @@ class ConnectorController extends BaseController
 		return $result;
 	}
 	
-	private function _pasteAction($configuration, $options)
+	private function _pasteAction($options)
 	{
 		$target = Yii::$app->request->post('target');
 		$object = Yii::$app->request->post('object');
@@ -254,7 +258,7 @@ class ConnectorController extends BaseController
 		return $result;
 	}
 	
-	private function _existrenameAction($configuration, $options)
+	private function _existrenameAction($options)
 	{
 		$target = $options['target'];
 		$object = $options['object'];
@@ -262,7 +266,7 @@ class ConnectorController extends BaseController
 		return $this->renderAjax('newname', ['oldName' => $File->name, 'target' => $target, 'object' => $object, 'File' => $File ]);
 	}
 	
-	private function _linkAction($configuration, $options)
+	private function _linkAction($options)
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
@@ -270,6 +274,10 @@ class ConnectorController extends BaseController
 		
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		$Folder = new File(['aliasId' => $alias, 'path' => $path]);
+		
+		if (!$Folder->exists && isset($options['force'])) {
+			FileHelper::createDirectory($Folder->absolute);
+		}
 		
 		if (!$Folder || !$Folder->isFolder) {
 			return [
@@ -281,37 +289,41 @@ class ConnectorController extends BaseController
 		$url = Yii::$app->request->post('link');
 		$filename = Yii::$app->request->post('filename');
 		
-		return $Folder->uploadByLink($url, $filename, $tmp);
+		return $Folder->uploadByLink($url, $filename, $tmp, isset($options['force']));
 	}
 	
-	private function _uploadAction($configuration, $options)
+	private function _uploadAction($options)
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
 	
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		$Folder = new File(['aliasId' => $alias, 'path' => $path]);
-	
+		
+		if (!$Folder->exists && isset($options['force'])) {
+			FileHelper::createDirectory($Folder->absolute);
+		}
+		
 		if (!$Folder || !$Folder->isFolder) {
 			return [
 				'status' => 'error',
-				'message' => 'Не найдена папка для копирования'
+				'message' => 'Не найдена папка для копирования '.$Folder->absolute
 			];
 		}
 	
 		$filename = Yii::$app->request->post('filename');
 	
-		return $Folder->upload($filename);
+		return $Folder->upload($filename, isset($options['force']));
 	}
 	
-	private function _progressAction($configuration, $options)
+	private function _progressAction($options)
 	{
 		$tmp = isset($options['tmp']) ? $options['tmp'] : '';
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		return (new Uploader)->getProgress($tmp);
 	}
 	
-	private function _imageAction($configuration, $options)
+	private function _imageAction($options)
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
@@ -326,7 +338,7 @@ class ConnectorController extends BaseController
 		return (new Image(['File'=>$File]))->process( Yii::$app->request->post(), $cnt);
 	}
 	
-	private function _saveImageAction($configuration, $options)
+	private function _saveImageAction($options)
 	{
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		
