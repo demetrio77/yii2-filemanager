@@ -155,18 +155,18 @@ class Image extends Object
 			$this->imagick = new \Imagick($this->tmpName);
 			
 			$width = $this->imagick->getimagewidth();
-			$heigth = $this->imagick->getimageheight();
+			$height = $this->imagick->getimageheight();
 			
-			$originalRatio = $width/$heigth;
+			$originalRatio = $width/$height;
 			$expectRatio = $size['width']/$size['height'];
-			
+
 			if ($originalRatio>$expectRatio) {
 				$this->imagick->cropthumbnailimage($size['width'], $size['height']);
 				$this->imagick->writeimage( Yii::getAlias($saveTo));
 			}
 			else {
 				$this->imagick->resizeimage($size['width'], 0, \imagick::FILTER_LANCZOS, 1);
-				$this->imagick->cropimage($size['width'], $size['height'], 0, round(($heigth * $expectRatio - $size['height'])/4));
+				$this->imagick->cropimage($size['width'], $size['height'], 0, round(($size['width']/$originalRatio - $size['height'])/4));
 				$this->imagick->writeimage( Yii::getAlias($saveTo));
 			}
 		}

@@ -23,7 +23,7 @@
     	fileName : false,
     	fileWithPath: false,
     	lazyLoadCnt : 75,
-    	destination: {} 
+    	destination: {}
     };
 
     var globalObjects = {};
@@ -221,7 +221,7 @@
                 			params.loadTo = {
                 				type: 'file',
                 				value :$this.settings.fileName,
-                				withPath: $this.settings.fileWithPath
+                				withPath: $this.settings.fileWithPath?1:0
                 			};
                 		}
                 		else if ($this.settings.defaultFolder) {
@@ -1620,6 +1620,7 @@
                 			window.opener.CKEDITOR.tools.callFunction( $this.settings.destination.CKEditorFuncNum, item.url());
                 		}
                 		else if ($this.settings.destination.type=='uploader'){
+                			console.log($this.settings);
                 			window.opener.FILEUPLOADER.set($this.settings.destination.id, $this.settings.fileWithPath? item.path() : item.url());
                 		}
                         window.close();
