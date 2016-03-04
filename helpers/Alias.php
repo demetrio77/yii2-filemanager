@@ -100,6 +100,24 @@ class Alias extends Model
 		return ['folders' => $folders];
 	}
 	
+	public function asRoot()
+	{
+		$folders [] = [
+				'name' => $this->label,
+				'href' => $this->url,
+				'alias' => $this->id,
+				'thumb' => \Yii::getAlias($this->thumbs['url']),
+				'isFolder' => true,
+				'mkdir' => $this->mkdir,
+				'copy' => $this->copy,
+				'cut' => $this->cut,
+				'paste' => $this->paste,
+				'rename' => $this->rename,
+				'remove' => $this->remove		
+		];
+		return ['folders' => $folders];
+	}  
+	
 	/*public static function explodeAliasPath($id)
 	{
 		$path = explode('/',$id);

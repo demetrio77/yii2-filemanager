@@ -17,31 +17,23 @@ class FileSystem extends Object
 	}
 	
 	
-	public static function folder($aliasId, $path)
+	public static function folder($Folder)
 	{
-		$Folder = new File(['aliasId' => $aliasId, 'path' => $path]);
-		
-		if ($Folder===false) return false;
-		if (!$Folder->exists) return false;
-		if (!$Folder->isFolder) return false;
-		
-		$folder = $Folder->absolute;
-		
+		$absolute = $Folder->absolute;
 		$folders = [];
 		$files = [];
 		
-		if (!file_exists($folder)) {
-			FileHelper::createDirectory($folder);
+		if (!file_exists($absolute)) {
+			FileHelper::createDirectory($absolute);
 		}
 		
-		$dir = opendir($folder);
+		$dir = opendir($absolute);
 		
 		while (($file = readdir($dir)) !== false)
 		{
 			if ($file!="." && $file!="..")
 			{
-				//$fullPath = $folder .DIRECTORY_SEPARATOR . $file;
-				$F = new File(['aliasId' => $aliasId, 'path' => $path . DIRECTORY_SEPARATOR . $file ]);
+				$F = new File(['aliasId' => $Folder->aliasId, 'path' => $Folder->path . DIRECTORY_SEPARATOR . $file ]);
 				if (!$F->isFolder)
 				{
 					$files[] = $F->item();
@@ -50,7 +42,7 @@ class FileSystem extends Object
 				{
 					$folders[] = [
 						'name' => $file,
-						'alias' => $aliasId,
+						'alias' => $Folder->aliasId,
 						'isFolder' => true,
 						'ext' => 'folder'
 					];

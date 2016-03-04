@@ -17,11 +17,13 @@ use yii\helpers\FileHelper;
 
 class ConnectorController extends BaseController
 {
-	public function actionIndex($action, array $options)
+	public function actionIndex($action, array $options=[])
 	{
 		switch ($action) {
-			case 'data': 
-				return $this->_dataAction($options );
+			case 'init':
+				return $this->_initAction();
+			case 'folder': 
+				return $this->_folderAction($options );
 			case 'rename':
 				return $this->_renameAction($options);
 			case 'refresh':
@@ -47,16 +49,117 @@ class ConnectorController extends BaseController
 		}
 	}
 	
-	private function _dataAction( $options) 
+	private function _initAction()
+	{
+		Yii::$app->response->format = Response::FORMAT_JSON;
+		
+		$init = Yii::$app->request->post('init');
+		$loadTo = Yii::$app->request->post('loadTo');
+		
+		$return = [];
+		switch ($init['type']) {
+			case 'configuration':
+				$return[0] = Alias::getRoot($init['value']);
+			break;
+			case 'alias':
+				$Alias = Alias::findById($init['value']);
+				if (!$Alias) {
+					return [
+						'found' => false,
+						'json' => $return,
+						'message' => 'Не найден Алиас'
+					];
+				}
+				$return[0] = $Alias->asRoot();
+			break;
+			default: return [
+				'found' => false
+			];
+		}
+		
+		if (isset($loadTo['type'])) switch ($loadTo['type']) {
+			case 'file':
+				if (isset($Alias)) {
+					$file = $loadTo['value'];
+					
+					if (!$loadTo['withPath']) {
+						$p = explode($Alias->url, $file);
+						
+						if (count($p)!=2) {
+							return [
+								'found' => false,
+								'json' => $return,
+								'message' => 'Неверный url'
+							];
+						}
+						
+						$p = explode('/', trim($p[1],'/'));
+					}
+					else {
+						$p = explode('/', trim($file,'/'));
+					}
+					
+					if (!file_exists(Yii::getAlias($Alias->folder).'/'.implode('/',$p))) {
+						return [
+							'found' => false,
+							'json' => $return,
+							'message' => 'Файл не найден '.Yii::getAlias($Alias->folder).'/'.implode('/',$p)
+						];
+					}
+					
+					$cur = '';
+					
+					foreach ($p as $uid) {
+						$return[ $Alias->id. ($cur!='' ?DIRECTORY_SEPARATOR :''). $cur ] = $this->getData(['configuration' => 'none', 'alias'=>$Alias->id, 'path' => $cur]);
+						$cur .= ($cur!='' ? DIRECTORY_SEPARATOR: '').$uid;
+					}
+				}				
+			break;
+			case 'folder':
+				$alias = $loadTo['value']['alias'];
+				$path =  $loadTo['value']['path'];
+				
+				$Folder = new File(['aliasId' => $alias, 'path' => $path ]);
+				if (!$Folder->exists || !$Folder->isFolder) {
+					FileHelper::createDirectory($Folder->absolute);
+				}
+				
+				$p = ArrayHelper::merge([''], explode('/', trim($path,'/')));
+				$cur = '';
+				
+				foreach ($p as $uid) {
+					$cur .= ($cur!='' ? DIRECTORY_SEPARATOR: '').$uid;
+					$return[ $Folder->alias->id. ($cur!='' ?DIRECTORY_SEPARATOR :''). $cur ] = $this->getData(['configuration' => 'none', 'alias'=>$alias, 'path' => $cur]);
+				}
+			break;
+		}
+		
+		return [
+			'found' => true,
+			'json' => $return
+		];
+	}
+	
+	private function _folderAction( $options) 
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
-		$file = isset($options['file']) ? $options['file'] : '';
 		$configuration = isset($options['configuration']) ? $options['configuration'] : 'default';
-		
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		
-		return $this->getData($configuration, $alias,$path,  $file);
+		return $this->getData(['configuration'=>$configuration, 'alias'=>$alias, 'path' =>$path]);
+	}
+	
+	public function getData($options)
+	{
+		$Folder = new File(['aliasId' => $options['alias'], 'path' => $options['path']]);
+		if ($Folder===false || !$Folder->exists || !$Folder->isFolder || ($options['configuration']!='none' && !$Folder->alias->inConfig($options['configuration']))) {
+			return [
+				'found' => false,
+				'json' => [],
+				'message' => 'Не найдена папка'
+			];
+		}
+		return FileSystem::folder($Folder);
 	}
 	
 	private function _renameAction($options)
@@ -145,86 +248,26 @@ class ConnectorController extends BaseController
 		}
 	}
 	
-	private function getData($configuration, $alias = '', $path='', $file='')
-	{
-		if (!$alias) {
-			if (!$file) {
-				return Alias::getRoot($configuration);
-			}
-			
-			$return = [];
-			$return[0] = Alias::getRoot($configuration);
-			
-			$Alias = Alias::findByUrl($file, $configuration);
-			
-			if (!$Alias) {
-				return [
-					'found' => false,
-					'json' => $return[0],
-					'message' => 'Не найден Алиас'
-				];
-			}
-			
-			if (!$Alias->inConfig($configuration)){
-				return [
-					'found' => false,
-					'json' => $return[0],
-					'message' => "Алиас {$Alias->id} с файлом не доступен в выбранной конфигурации"
-				];
-			}
-			
-			$p = explode($Alias->url, $file);
-				
-			if (count($p)!=2) {
-				return [
-					'found' => false,
-					'json' => $return[0],
-					'message' => 'Неверный url'
-				];
-			}
-				
-			$p = explode('/', trim($p[1],'/'));
-			
-			if (!file_exists(Yii::getAlias($Alias->folder).'/'.implode('/',$p))) {
-				return [
-					'found' => false,
-					'json' => $return[0],
-					'message' => 'Файл не найден '.Yii::getAlias($Alias->folder).'/'.implode('/',$p)
-				];
-			}			
-			
-			$cur = '';
-			
-			foreach ($p as $uid) {
-				$return[ $Alias->id. ($cur!='' ?DIRECTORY_SEPARATOR :''). $cur ] = $this->getData($configuration, $Alias->id, $cur);
-				$cur .= ($cur!='' ? DIRECTORY_SEPARATOR: '').$uid;
-			}
-			
-			return [
-				'found' => true,
-				'json' => $return
-			];
-		}
-		else {
-			$folder = FileSystem::folder($alias, $path);
-			if ($folder===false) {
-				throw new NotFoundHttpException();
-			}
-			return $folder;		
-		}
-	}
-	
-	private function _refreshAction()
+	private function _refreshAction($options)
 	{
 		$configuration = isset($options['configuration']) ? $options['configuration'] : 'default';
 		$folders = Yii::$app->request->post('folders');
 		$result = [];
 		foreach ($folders as $folder) {
 			if ($folder['alias']) {
-				$folder['result'] = FileSystem::folder($folder['alias'], $folder['path']);
+				$Folder = new File(['aliasId' => $folder['alias'], 'path'=>$folder['path']]);
+				if ($Folder && $Folder->exists && $Folder->isFolder) {
+					$folder['result'] = FileSystem::folder($Folder);
+				}
 			}
 			else {
-				$folder['result'] =  Alias::getRoot($configuration);
+				if ($configuration=='none') {
+					$Alias = Alias::findById($options['alias']);
+					$folder['result'] = $Alias->asRoot();
+				}
+				else {
+					$folder['result'] =  Alias::getRoot($configuration);
+				}
 			}
 			$result[$folder['uid']] = $folder;
 		}

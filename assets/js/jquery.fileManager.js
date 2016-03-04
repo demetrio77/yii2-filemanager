@@ -15,12 +15,15 @@
     var csrfToken = $('meta[name="csrf-token"]').attr("content");
     
     var defaults = {
-    	CKEditor: {}, //instance: 'CKEditor',langCode: 'ru',CKEditorFuncNum: 0
-        //filterSelector: undefined
+    	//CKEditor: {}, //instance: 'CKEditor',langCode: 'ru',CKEditorFuncNum: 0
+        defaultFolder: false,
     	connector : '',
     	configuration: 'default',
-    	fileName : '',
-    	lazyLoadCnt : 75
+    	alias: false,
+    	fileName : false,
+    	fileWithPath: false,
+    	lazyLoadCnt : 75,
+    	destination: {} 
     };
 
     var globalObjects = {};
@@ -200,17 +203,67 @@
                 	this.searchText = '';
                 	
                 	this.init = function(){
-                		if (!$this.settings.fileName) {
-                			this.data[file.count] = new file({
-                				isFolder: true
-                			});
-                			
-                			this.load(0);
-                			return {};
+                		var params = {};
+                		if ($this.settings.alias) {
+                			params.init = {
+            					type: 'alias',
+            					value: $this.settings.alias
+            				};
                 		}
                 		else {
-                			return this.loadTo($this.settings.fileName);
+                			params.init = {
+                				type: 'configuration',
+                    			value: $this.settings.configuration	
+                			};
                 		}
+                		
+                		if ($this.settings.fileName) {
+                			params.loadTo = {
+                				type: 'file',
+                				value :$this.settings.fileName,
+                				withPath: $this.settings.fileWithPath
+                			};
+                		}
+                		else if ($this.settings.defaultFolder) {
+                			params.loadTo = {
+                				type: 'folder',
+                				value: $this.settings.defaultFolder
+                			};
+                		}
+                		
+                		params._csrf = csrfToken;
+                		//console.log(params);
+                		var toExpand = new Array();
+                		
+                		$.ajax({
+                			async: false,
+                			method: 'post',
+                			url: $this.settings.connector + '?action=init',
+                			data: params,
+                			dataType: 'json'
+                		}).done( function(json){
+                			console.log(json);
+                			self.error = !json.found;
+                			if (!self.error) {
+                				$.each(json.json, function(id, folder){
+                					if (id==0) {
+	                					item = self._defaultItem();
+	                				}
+	                				else {
+	                					var uid = findByPath(id);
+	                					item = self.data[uid];
+	                					toExpand.push(uid);
+	                				}
+	                				self._loadItems(item, folder);
+	                			});
+                			}
+                			else {
+                				self.data[0] = self._defaultItem();
+                				self._loadItems(self.data[0], json.json[0]);
+                				toExpand = {};
+                			}
+                		});
+                		return toExpand;
                 	};
                 	
                 	this.sorting = function(id) {
@@ -238,7 +291,7 @@
                 			$.ajax({
 	                			async: false,
 	                			method: 'get',
-	                			url: $this.settings.connector + '?action=data&options[configuration]='+$this.settings.configuration+'&options[alias]=' + item.alias + '&options[path]='+item.path(),
+	                			url: $this.settings.connector + '?action=folder&options[configuration]='+$this.settings.configuration+'&options[alias]=' + item.alias + '&options[path]='+item.path(),
 	                			dataType: 'json'
 	                		}).done( function(json){
 	                			self._loadItems(item, json);
@@ -246,12 +299,22 @@
                 		}
                 	};
                 	
-                	this.loadTo = function(file) {
+                	/*this.loadTo = function(file) {
+                		if (typeof file === 'string') {
+                			//файл
+                			var url = $this.settings.connector + '?action=data&options[configuration]='+$this.settings.configuration+'&options[file]='+file+'&options[alias]='+$this.settings.alias;
+                		}
+                		else if (typeof file === 'object') {
+                			//папка
+                			var alias = file.alias;
+                			var path = file.path;
+                			var url = $this.settings.connector + '?action=data&options[configuration]='+$this.settings.configuration+'&options[alias]='+alias+'&options[path]='+path+'&options['+($this.settings.alias!=''?'onlyfolder':'tofolder')+']';
+                		}
                 		var toExpand = new Array();
                 		$.ajax({
                 			async: false,
                 			method: 'get',
-                			url: $this.settings.connector + '?action=data&options[configuration]='+$this.settings.configuration+'&options[file]='+file,
+                			url: url,
                 			dataType: 'json'
                 		}).done( function(json) {
                 			self.error = !json.found;
@@ -274,9 +337,8 @@
                 				toExpand = {};
                 			}
                 		});
-                		
                 		return toExpand;
-                	};
+                	};*/
                 	
                 	this._defaultItem = function() {
                 		return new file({isFolder: true});
@@ -323,7 +385,7 @@
                 				item.files.push(f.id);
                 				self.data[f.id] = f;
                 				if ($this.settings.fileName!='') {
-            						if (f.url()==$this.settings.fileName) {
+            						if (f.url()==$this.settings.fileName || f.path()==$this.settings.fileName) {
             							self.fileChosen = f.id;
             						}
             					}
@@ -406,10 +468,17 @@
                 			}
                 		}
                 		
+                		if ($this.settings.configuration=='none') {
+                			var url = $this.settings.connector + '?action=refresh&options[configuration]='+$this.settings.configuration+'&options[alias]='+$this.settings.alias; 
+                		}
+                		else {
+                			var url = $this.settings.connector + '?action=refresh&options[configuration]='+$this.settings.configuration;
+                		}
+                		
                 		$.ajax({
                 			async: false,
                 			method: 'post',
-                			url: $this.settings.connector + '?action=refresh&options[configuration]='+$this.settings.configuration,
+                			url: url,
                 			data: {folders: toRefresh, _csrf: csrfToken},
                 			dataType: 'json'
                 		})
@@ -683,8 +752,7 @@
                 	this.init = function(folders) {
                 		$('label[data-id="'+this.filesView+'"]', this.panelFilesView).addClass('active');
                 		this.renderRoot();
-                		
-                		if ($this.settings.fileName!='') {
+                		if (folders.length>0) {
         					if (!model.error) {
                 				this.expandTo(folders);
                 				var newCurrent = folders.pop();
@@ -1548,7 +1616,12 @@
                 	
                 	this.select = function(id) {
                 		var item = model.data[id];
-                		window.opener.CKEDITOR.tools.callFunction( $this.settings.CKEditor.CKEditorFuncNum, item.url());
+                		if ($this.settings.destination.type=='ckeditor') {
+                			window.opener.CKEDITOR.tools.callFunction( $this.settings.destination.CKEditorFuncNum, item.url());
+                		}
+                		else if ($this.settings.destination.type=='uploader'){
+                			window.opener.FILEUPLOADER.set($this.settings.destination.id, $this.settings.fileWithPath? item.path() : item.url());
+                		}
                         window.close();
                 	};
                 	
