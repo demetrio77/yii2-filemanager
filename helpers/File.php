@@ -323,4 +323,18 @@ class File extends Model
 		}
 		return $result;
 	}
+	
+	public static function formatSize($bytes) {
+		if ($bytes < 1024) {
+			return "$bytes байт";
+		}
+		if ($bytes < 1024*1024) {
+			return  round($bytes/1024).' Кб'; 
+		}
+		if ($bytes < 1024*1024*1024) {
+			return  round($bytes/(1024*1024),1).' Мб';
+		}
+		
+		return  round($bytes/(1024*1024*1024),1).' Гб';
+	} 
 }
