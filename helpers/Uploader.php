@@ -7,6 +7,7 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\Inflector;
 use yii\helpers\Json;
 use yii\web\UploadedFile;
+use demetrio77\smartadmin\helpers\TransliteratorHelper;
 
 /**
  * @property demetrio77\manager\helpers\File $Folder
@@ -52,19 +53,9 @@ class Uploader extends Object
 		return $name;
 	}
 	
-	private function slugify($string, $replacement = '-', $lowercase = true) 
+	private function slugify($string) 
 	{
-		if (extension_loaded('intl')) {
-            $string = transliterator_transliterate(Inflector::$transliterator, $string);
-        } else {
-            $string = str_replace(array_keys(Inflector::$transliteration), Inflector::$transliteration, $string);
-        }
-        
-		$string = preg_replace('/[^a-zA-Z_0-9=\s—–-]+/u', '', $string);
-		$string = preg_replace('/[=\s—–-]+/u', $replacement, $string);
-		$string = trim($string, $replacement);
-		
-		return $lowercase ? strtolower($string) : $string;
+		return Inflector::slug(TransliteratorHelper::process($string));
 	}
 	
 	private function processExist($fileName)
