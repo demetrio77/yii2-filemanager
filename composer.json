@@ -16,7 +16,6 @@
         "ext-imagick": "*",
         "yiisoft/yii2": ">=2.0.6",
         "flesler/jquery.scrollto" : "*",
-        "demetrio77/yii2-transliterator-helper" : "*",
         "bower-asset/jstree":"*",
         "bower-asset/Jcrop":"*"
     },
@@ -24,9 +23,5 @@
         "psr-4": {
             "demetrio77\\manager\\": ""
         }
-    },
-    "repositories" : [{
-    	"type" : "git",
-	    "url" : "https://github.com/demetrio77/yii2-transliterator-helper"
-	 }]
+    }
 }
