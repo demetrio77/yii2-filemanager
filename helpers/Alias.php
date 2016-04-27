@@ -107,7 +107,7 @@ class Alias extends Model
 			$Alias = self::findById($alias);
 			if ($Alias->can) $folders[] = [
 				'name' => $Alias->label,
-				'href' => $Alias->url, 
+				'href' => $Alias->fullUrl, 
 				'alias' => $Alias->id,
 				'thumb' => \Yii::getAlias($Alias->thumbs['url']),
 				'isFolder' => true,
@@ -129,7 +129,7 @@ class Alias extends Model
 		if ($this->can) {
 			$folders [] = [
 				'name' => $this->label,
-				'href' => $this->url,
+				'href' => $this->fullUrl,
 				'alias' => $this->id,
 				'thumb' => \Yii::getAlias($this->thumbs['url']),
 				'isFolder' => true,
