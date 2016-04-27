@@ -23,29 +23,31 @@ class FileSystem extends Object
 		$folders = [];
 		$files = [];
 		
-		if (!file_exists($absolute)) {
-			FileHelper::createDirectory($absolute);
-		}
-		
-		$dir = opendir($absolute);
-		
-		while (($file = readdir($dir)) !== false)
-		{
-			if ($file!="." && $file!="..")
+		if ($Folder->alias->can) {
+			if (!file_exists($absolute)) {
+				FileHelper::createDirectory($absolute);
+			}
+			
+			$dir = opendir($absolute);
+			
+			while (($file = readdir($dir)) !== false)
 			{
-				$F = new File(['aliasId' => $Folder->aliasId, 'path' => $Folder->path . DIRECTORY_SEPARATOR . $file ]);
-				if (!$F->isFolder)
+				if ($file!="." && $file!="..")
 				{
-					$files[] = $F->item();
-				}
-				elseif ($F->isFolder)
-				{
-					$folders[] = [
-						'name' => $file,
-						'alias' => $Folder->aliasId,
-						'isFolder' => true,
-						'ext' => 'folder'
-					];
+					$F = new File(['aliasId' => $Folder->aliasId, 'path' => $Folder->path . DIRECTORY_SEPARATOR . $file ]);
+					if (!$F->isFolder)
+					{
+						$files[] = $F->item();
+					}
+					elseif ($F->isFolder)
+					{
+						$folders[] = [
+							'name' => $file,
+							'alias' => $Folder->aliasId,
+							'isFolder' => true,
+							'ext' => 'folder'
+						];
+					}
 				}
 			}
 		}
