@@ -63,7 +63,7 @@ class Uploader extends Object
 		$rightDot = strrpos($fileName, '.');
 		if ($rightDot!==false) {
 			$baseName = substr($fileName, 0, $rightDot);
-			$extension = substr($fileName, $rightDot+1);
+			$extension = strtolower(substr($fileName, $rightDot+1));
 		}
 		else {
 			$baseName = $fileName;
