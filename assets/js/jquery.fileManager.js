@@ -299,47 +299,6 @@
                 		}
                 	};
                 	
-                	/*this.loadTo = function(file) {
-                		if (typeof file === 'string') {
-                			//файл
-                			var url = $this.settings.connector + '?action=data&options[configuration]='+$this.settings.configuration+'&options[file]='+file+'&options[alias]='+$this.settings.alias;
-                		}
-                		else if (typeof file === 'object') {
-                			//папка
-                			var alias = file.alias;
-                			var path = file.path;
-                			var url = $this.settings.connector + '?action=data&options[configuration]='+$this.settings.configuration+'&options[alias]='+alias+'&options[path]='+path+'&options['+($this.settings.alias!=''?'onlyfolder':'tofolder')+']';
-                		}
-                		var toExpand = new Array();
-                		$.ajax({
-                			async: false,
-                			method: 'get',
-                			url: url,
-                			dataType: 'json'
-                		}).done( function(json) {
-                			self.error = !json.found;
-                			if (!self.error) {
-                				$.each(json.json, function(id, folder){
-                					if (id==0) {
-	                					item = self._defaultItem();
-	                				}
-	                				else {
-	                					var uid = findByPath(id);
-	                					item = self.data[uid];
-	                					toExpand.push(uid);
-	                				}
-	                				self._loadItems(item, folder);
-	                			});
-                			}
-                			else {
-                				self.data[0] = self._defaultItem();
-                				self._loadItems(self.data[0], json.json);
-                				toExpand = {};
-                			}
-                		});
-                		return toExpand;
-                	};*/
-                	
                 	this._defaultItem = function() {
                 		return new file({isFolder: true});
                 	};
@@ -1084,7 +1043,7 @@
 		                		<div class="help-block"></div>\
 		            		</div>\
 		        			<div class="form-group">\
-		        				<button id="upload-start" class="btn btn-success">Загрузить</button>\
+		        				<button id="upload-start" class="upload-start btn btn-success">Загрузить</button>\
 		        			</div>\
 		            		<div style="display:none" class="progress">\
 		            		  <div id="upload-progress" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">\
@@ -1421,7 +1380,7 @@
                 				this.uploadProgress = $('#upload-progress', view.modal);                				
                 				this.uploadPanel = $('#upload-panel', view.modal);                				
                 				this.uploadExt = $('#upload-ext', view.modal);
-                				this.uploadStart = $('#upload-start', view.modal).eq(0);
+                				this.uploadStart = $('.upload-start', view.modal);
             					
                 				var item = model.data[view.current]; 
                 				
@@ -1435,7 +1394,7 @@
                 				    	filename: ''
                 				    },
                 					elements: {
-                						ctrl: { upload: '#upload-start'},
+                						ctrl: { upload: '.upload-start' },
                 						size: me.uploadProgress,
                 						active:  { 
                 							show: me.uploadProgress.parent()
