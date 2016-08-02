@@ -17,6 +17,8 @@ class Module extends \yii\base\Module
 	public $paste = true;
 	public $remove = false;
 	public $rename = false;
+	public $rights = [];
+	public $userInstance = 'user';
 	
 	public function init()
 	{

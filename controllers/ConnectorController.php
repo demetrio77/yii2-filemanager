@@ -63,11 +63,11 @@ class ConnectorController extends BaseController
 			break;
 			case 'alias':
 				$Alias = Alias::findById($init['value']);
-				if (!$Alias) {
+				if (!$Alias || !$Alias->can) {
 					return [
 						'found' => false,
 						'json' => $return,
-						'message' => 'Не найден Алиас'
+						'message' => 'Не найден Алиас или на него нет прав'
 					];
 				}
 				$return[0] = $Alias->asRoot();
@@ -79,7 +79,7 @@ class ConnectorController extends BaseController
 		
 		if (isset($loadTo['type'])) switch ($loadTo['type']) {
 			case 'file':
-				if (isset($Alias)) {
+				if (isset($Alias) && $Alias->can) {
 					$file = $loadTo['value'];
 					
 					if (!$loadTo['withPath']) {
@@ -120,6 +120,9 @@ class ConnectorController extends BaseController
 				$path =  $loadTo['value']['path'];
 				
 				$Folder = new File(['aliasId' => $alias, 'path' => $path ]);
+				
+				if (!$Folder->alias->can) break;
+				
 				if (!$Folder->exists || !$Folder->isFolder) {
 					FileHelper::createDirectory($Folder->absolute);
 				}
@@ -159,6 +162,13 @@ class ConnectorController extends BaseController
 				'message' => 'Не найдена папка'
 			];
 		}
+		if (!$Folder->alias->can) {
+			return [
+				'found' => false,
+				'json' => [],
+				'message' => 'Не хватает прав'
+			];
+		}
 		return FileSystem::folder($Folder);
 	}
 	
@@ -174,6 +184,7 @@ class ConnectorController extends BaseController
 		if (Yii::$app->request->isPost) {
 			Yii::$app->response->format = Response::FORMAT_JSON;
 			$oldName = $File->filename;
+			
 			if ($model->load(Yii::$app->request->post()) && $model->validate() && $File->rename($model->newFilename, $model)) {
 				return [
 					'status' => 'success',
@@ -378,6 +389,10 @@ class ConnectorController extends BaseController
 			return ['status' => 'error', 'message' => 'Это не рисунок'];
 		}
 		
+		if (!$File->alias->can) {
+			return ['status' => 'error', 'message' => 'Не хватает прав'];
+		}
+		
 		return (new Image(['File'=>$File]))->process( Yii::$app->request->post(), $cnt);
 	}
 	
@@ -389,10 +404,13 @@ class ConnectorController extends BaseController
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
 		
 		$File = new File(['aliasId' => $alias, 'path' => $path]);
+		
 		if (!$File->isImage) {
 			return ['status' => 'error', 'message' => 'Это не рисунок'];
 		}
-		
+		if (!$File->alias->can) {
+			return ['status' => 'error', 'message' => 'Не хватает прав'];
+		}
 		$res = (new Image(['File'=>$File]))->save( Yii::$app->request->post());
 		
 		return $res;

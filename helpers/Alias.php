@@ -16,15 +16,19 @@ class Alias extends Model
 	public $thumbs = false;
 	public $slugify = true;
 	public $rewriteIfExists = false;
+	public $rights = [];
 	public $mkdir = true;
 	public $copy = true;
 	public $cut = false;
 	public $paste = true;
 	public $remove = false;
 	public $rename = false;
+	public $userInstance = '';
 	
 	public function init(){
 		$module = Module::getInstance();
+		
+		$this->userInstance = $module->userInstance;
 		$this->thumbs = $module->thumbs;
 		$this->rewriteIfExists = $module->rewriteIfExists;
 		$this->slugify = $module->slugify;
@@ -34,7 +38,10 @@ class Alias extends Model
 		$this->paste = $module->paste;
 		$this->remove = $module->remove;
 		$this->rename = $module->rename;
+		$this->rights = $module->rights;
+		
 		parent::init();
+		
 		if (is_array($module->image) && is_array($this->image)) {
 			$this->image = ArrayHelper::merge($module->image, $this->image);
 		}
@@ -60,6 +67,22 @@ class Alias extends Model
 		return \Yii::getAlias($this->url);
 	}
 	
+	public function getCan()
+	{
+		if (empty($this->rights)) return true;
+		if (!is_array($this->rights)) {
+			$this->rights = [$this->rights];
+		}
+		$user = \Yii::$app->{ $this->userInstance };
+		foreach ($this->rights as $right) {
+			if ($user->can($right)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public function loadFromArray($array) {
 		foreach ($array as $key => $value) {
 			if(property_exists($this, $key)) {
@@ -82,9 +105,9 @@ class Alias extends Model
 		
 		foreach ($config as $alias) {
 			$Alias = self::findById($alias);
-			$folders[] = [
+			if ($Alias->can) $folders[] = [
 				'name' => $Alias->label,
-				'href' => $Alias->url, 
+				'href' => $Alias->fullUrl, 
 				'alias' => $Alias->id,
 				'thumb' => \Yii::getAlias($Alias->thumbs['url']),
 				'isFolder' => true,
@@ -102,9 +125,11 @@ class Alias extends Model
 	
 	public function asRoot()
 	{
-		$folders [] = [
+		$folders = [];
+		if ($this->can) {
+			$folders [] = [
 				'name' => $this->label,
-				'href' => $this->url,
+				'href' => $this->fullUrl,
 				'alias' => $this->id,
 				'thumb' => \Yii::getAlias($this->thumbs['url']),
 				'isFolder' => true,
@@ -114,20 +139,10 @@ class Alias extends Model
 				'paste' => $this->paste,
 				'rename' => $this->rename,
 				'remove' => $this->remove		
-		];
+			];
+		}
 		return ['folders' => $folders];
 	}  
-	
-	/*public static function explodeAliasPath($id)
-	{
-		$path = explode('/',$id);
-		$aliasName = array_shift($path);
-		$path = implode('/', $path);
-		return [
-			$aliasName, 
-			$path 
-		];
-	}*/
 	
 	public static function findById($id)
 	{

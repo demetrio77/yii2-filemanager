@@ -182,6 +182,10 @@ class File extends Model
 			$model->addError('newFilename', 'Запрещено переименовывать файлы');
 			return false;
 		}
+		if (!$this->alias->can) {
+			$model->addError('newFilename', 'Не хватает прав');
+			return false;
+		}
 		
 		if (rename($this->absolute, $newAbsolute)) {
 			$this->thumb->rename($name. ($this->extension ? '.' . $this->extension : ''));
@@ -200,25 +204,33 @@ class File extends Model
 	 */
 	public function mkdir($name, $model = false) 
 	{
-		if ($this->isFolder && $this->alias->mkdir) {
-			return mkdir($this->absolute . DIRECTORY_SEPARATOR . $name , self::$mkdirMode);
-		}
 		if ($model!==false) {
 			if (!$this->isFolder) {
 				$model->addError('name', 'Не найдено, где сохранять папку');
+				return false;
 			}
 			if (!$this->alias->mkdir) {
 				$model->addError('name', 'Запрещено создавать папки');
+				return false;
+			}
+			if (!$this->alias->can) {
+				$model->addError('name', 'Не хватает прав');
+				return false;
 			}
 		}
-		return false;
+		if ($this->isFolder && $this->alias->mkdir) {
+			return mkdir($this->absolute . DIRECTORY_SEPARATOR . $name , self::$mkdirMode);
+		}		
 	}
 	
 	public function delete() 
 	{
+		if (!$this->alias->can) {
+			return false;
+		}
+		
 		try {
 			$this->thumb->delete();
-			
 			$this->image->delete();
 			
 			if ($this->isFolder) {
@@ -236,6 +248,10 @@ class File extends Model
 	
 	public function uploadByLink($url, $filename, $tmp)
 	{
+		if (!$this->alias->can) {
+			return ['status' => 'error', 'message' => 'Не хватает прав'];
+		}
+		
 		$Uploader = new Uploader([
 			'Folder' => $this,
 			'Alias' => $this->_alias
@@ -246,6 +262,10 @@ class File extends Model
 	
 	public function upload($filename)
 	{
+		if (!$this->alias->can) {
+			return ['status' => 'error', 'message' => 'Не хватает прав'];
+		}
+		
 		$Uploader = new Uploader([
 			'Folder' => $this,
 			'Alias' => $this->_alias
@@ -259,6 +279,10 @@ class File extends Model
 	{//ok - если ок, validate - если не NewName и Exists, error - если что-то не так
 		if (!$this->alias->paste) {
 			return ['status' => 'error', 'message' => 'В эту папку запрещено копировать'];
+		}
+		
+		if (!$ObjectFile->alias->can || !$this->alias->can) {
+			return ['status' => 'error', 'message' => 'Не хватает прав'];
 		}
 		
 		if (!$ObjectFile->alias->{$isMove?'cut':'copy'}) {
@@ -323,4 +347,18 @@ class File extends Model
 		}
 		return $result;
 	}
+	
+	public static function formatSize($bytes) {
+		if ($bytes < 1024) {
+			return "$bytes байт";
+		}
+		if ($bytes < 1024*1024) {
+			return  round($bytes/1024).' Кб'; 
+		}
+		if ($bytes < 1024*1024*1024) {
+			return  round($bytes/(1024*1024),1).' Мб';
+		}
+		
+		return  round($bytes/(1024*1024*1024),1).' Гб';
+	} 
 }

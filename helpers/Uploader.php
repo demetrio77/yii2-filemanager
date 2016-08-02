@@ -7,6 +7,7 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\Inflector;
 use yii\helpers\Json;
 use yii\web\UploadedFile;
+use demetrio77\smartadmin\helpers\TransliteratorHelper;
 
 /**
  * @property demetrio77\manager\helpers\File $Folder
@@ -61,12 +62,17 @@ class Uploader extends Object
 		return $this->name . ($this->extension ? '.' . $this->extension : '');
 	}
 	
+	private function nameSlugify() 
+	{
+		$this->name = Inflector::slug(TransliteratorHelper::process($this->name));
+	}
+	
 	private function processNameAndExtension($filename)
 	{
 		$rightDot = strrpos($filename, '.');
 		if ($rightDot!==false) {
 			$this->name = substr($filename, 0, $rightDot);
-			$this->extension = substr($filename, $rightDot+1);
+			$this->extension = strtolower(substr($filename, $rightDot+1));
 		}
 		else {
 			$this->name = $filename;
@@ -116,21 +122,6 @@ class Uploader extends Object
 		$this->name = $checkName;
 	}
 	
-	private function nameSlugify()
-	{
-		if (extension_loaded('intl')) {
-			$this->name = transliterator_transliterate(Inflector::$transliterator, $this->name);
-		} else {
-			$this->name = str_replace(array_keys(Inflector::$transliteration), Inflector::$transliteration, $this->name);
-		}
-		
-		$this->name = preg_replace('/[^a-zA-Z_0-9=\s—–-]+/u', '', $this->name);
-		$this->name = preg_replace('/[=\s—–-]+/u', '-', $this->name);
-		$this->name = trim($this->name, '-');
-		
-		$this->name = strtolower($this->name);
-	}
-		
 	public function getProgressTmpFile() 
 	{
 		if (!$this->_progressTmpFile) {
