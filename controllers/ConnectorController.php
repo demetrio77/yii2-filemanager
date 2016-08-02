@@ -46,6 +46,8 @@ class ConnectorController extends BaseController
 				return $this->_imageAction($options);
 			case 'saveimage':
 				return $this->_saveImageAction($options);
+			case 'item':
+				return $this->_itemAction($options);
 		}
 	}
 	
@@ -414,5 +416,15 @@ class ConnectorController extends BaseController
 		$res = (new Image(['File'=>$File]))->save( Yii::$app->request->post());
 		
 		return $res;
+	}
+	
+	private function _itemAction($options)
+	{
+		$path = isset($options['path']) ? $options['path'] : '';
+		$alias =  isset($options['alias']) ? $options['alias'] : '';
+		Yii::$app->response->format = Response::FORMAT_JSON;
+		$File = new File(['aliasId' => $alias, 'path' => $path]);
+		
+		return ArrayHelper::merge( $File->item(), ['url' => $File->url]);
 	}
 }
