@@ -20,6 +20,8 @@ class Uploader extends Object
 	public $Alias;
 	
 	private $_progressTmpFile = 'tmp.dat';
+	private $name = '';
+	private $extension = '';
 	
 	private function getError($n)
 	{
@@ -37,67 +39,42 @@ class Uploader extends Object
 	
 	private function getName($options)
 	{
-		if (isset($options['name']) && $options['name']) {
-			$name = $options['name'];
-		}
-		elseif (isset($options['url'])) {
-			$name = $this->getNameFromUrl($options['url']);
+		if (isset($options['url'])) {
+			$this->nameByUrl($options['url']);
 		}
 		elseif (isset($options['uploadname']) && $options['uploadname']) {
-			$name = $options['uploadname'];
-		}		
-
-		$name = $this->processExist($name);
+			$this->nameByUploaded($options['uploadname']);
+		}
 		
-		return $name;
+		if (isset($options['name']) && $options['name']) {
+			$this->nameByPredefined($options['name']);
+		}
+		
+		if ($this->Alias->slugify) {
+			$this->nameSlugify();
+		}
+		
+		if (!$this->Alias->rewriteIfExists) {
+			$this->nameExist();
+		}
+		
+		return $this->name . ($this->extension ? '.' . $this->extension : '');
 	}
 	
-	private function slugify($string, $replacement = '-', $lowercase = true) 
+	private function processNameAndExtension($filename)
 	{
-		if (extension_loaded('intl')) {
-            $string = transliterator_transliterate(Inflector::$transliterator, $string);
-        } else {
-            $string = str_replace(array_keys(Inflector::$transliteration), Inflector::$transliteration, $string);
-        }
-        
-		$string = preg_replace('/[^a-zA-Z_0-9=\s—–-]+/u', '', $string);
-		$string = preg_replace('/[=\s—–-]+/u', $replacement, $string);
-		$string = trim($string, $replacement);
-		
-		return $lowercase ? strtolower($string) : $string;
-	}
-	
-	private function processExist($fileName)
-	{
-		$rightDot = strrpos($fileName, '.');
+		$rightDot = strrpos($filename, '.');
 		if ($rightDot!==false) {
-			$baseName = substr($fileName, 0, $rightDot);
-			$extension = substr($fileName, $rightDot+1);
+			$this->name = substr($filename, 0, $rightDot);
+			$this->extension = substr($filename, $rightDot+1);
 		}
 		else {
-			$baseName = $fileName;
-			$extension = '';
+			$this->name = $filename;
+			$this->extension = '';
 		}
-
-		if ($this->Alias->slugify) {
-			$baseName = $this->slugify($baseName);
-		}
-		
-		if (! $this->Alias->rewriteIfExists) {
-			$checkName = $baseName;
-			$i = 0;
-			
-			while (file_exists( $this->Folder->absolute . DIRECTORY_SEPARATOR . $checkName .($extension?'.'.$extension:'')   )) {
-				$checkName = $baseName.'-'.$i;
-				$i++;
-			}
-			return $checkName.($extension?'.'.$extension:'');
-		}
-		
-		return $baseName.($extension?'.'.$extension:'');
 	}
 	
-	private function getNameFromUrl($url)
+	private function nameByUrl($url)
 	{
 		$pos = mb_strpos($url, '?');
 		if ($pos!==false) {
@@ -108,9 +85,52 @@ class Uploader extends Object
 			$url = mb_substr($url, 0, $pos);
 		}
 		$expl = explode('/', $url);
-		return array_pop($expl);
+		$filename = array_pop($expl);
+				
+		$this->processNameAndExtension($filename);
 	}
 	
+	private function nameByUploaded($uploadname)
+	{
+		$this->processNameAndExtension($uploadname);
+	}
+	
+	private function nameByPredefined($defined)
+	{
+		if ($defined =='{{time}}') {
+			$this->name = time();
+		}
+		else {
+			$this->name = $defined;
+		}
+	}
+	
+	private function nameExist()
+	{
+		$i = 0;	
+		$checkName = $this->name;		
+		while (file_exists( $this->Folder->absolute . DIRECTORY_SEPARATOR . $checkName .($this->extension?'.'.$this->extension:'')   )) {
+			$checkName = $this->name.'-'.$i;
+			$i++;
+		}
+		$this->name = $checkName;
+	}
+	
+	private function nameSlugify()
+	{
+		if (extension_loaded('intl')) {
+			$this->name = transliterator_transliterate(Inflector::$transliterator, $this->name);
+		} else {
+			$this->name = str_replace(array_keys(Inflector::$transliteration), Inflector::$transliteration, $this->name);
+		}
+		
+		$this->name = preg_replace('/[^a-zA-Z_0-9=\s—–-]+/u', '', $this->name);
+		$this->name = preg_replace('/[=\s—–-]+/u', '-', $this->name);
+		$this->name = trim($this->name, '-');
+		
+		$this->name = strtolower($this->name);
+	}
+		
 	public function getProgressTmpFile() 
 	{
 		if (!$this->_progressTmpFile) {
@@ -131,7 +151,7 @@ class Uploader extends Object
 	
 	public function byLink($url, $options=  [])
 	{
-		$name = $this->getName(ArrayHelper::merge($options, ['url' => $url ]));
+		$this->getName(ArrayHelper::merge($options, ['url' => $url ]));
 		
 		$File = new File(['aliasId' => $this->Alias->id, 'path' => $this->Folder->path . DIRECTORY_SEPARATOR . $name ]);
 		

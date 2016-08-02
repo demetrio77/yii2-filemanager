@@ -43,7 +43,7 @@ class Image extends Object
 	
 	public function getCopyFullPath($copy)
 	{
-		return \Yii::getAlias( $copy['folder']) . DIRECTORY_SEPARATOR . $this->File->alias->id. DIRECTORY_SEPARATOR . $this->File->path;
+		return \Yii::getAlias( $copy['folder']) . DIRECTORY_SEPARATOR . $this->File->path;
 	}
 	
 	public function __destruct()
