@@ -331,7 +331,7 @@ class ConnectorController extends BaseController
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		$Folder = new File(['aliasId' => $alias, 'path' => $path]);
 		
-		if (!$Folder->exists && isset($options['force'])) {
+		if (!$Folder->exists /*&& isset($options['force'])*/) {
 			FileHelper::createDirectory($Folder->absolute);
 		}
 		
@@ -356,7 +356,7 @@ class ConnectorController extends BaseController
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		$Folder = new File(['aliasId' => $alias, 'path' => $path]);
 		
-		if (!$Folder->exists && isset($options['force'])) {
+		if (!$Folder->exists /*&& isset($options['force'])*/) {
 			FileHelper::createDirectory($Folder->absolute);
 		}
 		

@@ -44,11 +44,11 @@ class Uploader extends Object
 			$this->nameByUrl($options['url']);
 		}
 		elseif (isset($options['uploadname']) && $options['uploadname']) {
-			$this->nameByUploaded($options['uploadname']);
+			$this->naming($options['uploadname']);
 		}
 		
-		if (isset($options['name']) && $options['name']) {
-			$this->nameByPredefined($options['name']);
+		if (isset($options['name']) && $options['name']=='{{time}}') {
+			$this->name = time();
 		}
 		
 		if ($this->Alias->slugify) {
@@ -96,19 +96,9 @@ class Uploader extends Object
 		$this->processNameAndExtension($filename);
 	}
 	
-	private function nameByUploaded($uploadname)
+	private function naming($name)
 	{
-		$this->processNameAndExtension($uploadname);
-	}
-	
-	private function nameByPredefined($defined)
-	{
-		if ($defined =='{{time}}') {
-			$this->name = time();
-		}
-		else {
-			$this->name = $defined;
-		}
+		$this->processNameAndExtension($name);
 	}
 	
 	private function nameExist()
@@ -144,7 +134,7 @@ class Uploader extends Object
 	{
 		$this->getName(ArrayHelper::merge($options, ['url' => $url ]));
 		
-		$File = new File(['aliasId' => $this->Alias->id, 'path' => $this->Folder->path . DIRECTORY_SEPARATOR . $name ]);
+		$File = new File(['aliasId' => $this->Alias->id, 'path' => $this->Folder->path . DIRECTORY_SEPARATOR . $this->name . ($this->extension ? '.' . $this->extension : '') ]);
 		
 		if (isset($options['tmp'])) {
 			$this->_progressTmpFile = (int)$options['tmp'];
@@ -200,6 +190,7 @@ class Uploader extends Object
 		$file = UploadedFile::getInstanceByName('file');
 		
 		$name = $this->getName(ArrayHelper::merge($options, ['uploadname' => $file->name ]));
+		
 		$File = new File(['aliasId' => $this->Alias->id, 'path' => $this->Folder->path . DIRECTORY_SEPARATOR . $name ]);
 		
 		if ($file->saveAs($File->absolute)) {			
