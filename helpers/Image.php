@@ -57,7 +57,7 @@ class Image extends Object
 			$this->_options = $this->File->alias->image;
 		}
 		
-		if (isset($this->options['copies'])) if (ArrayHelper::isAssociative($this->_options['copies'])) {
+		if (isset($this->options['copies'])) if (ArrayHelper::isAssociative($this->_options['copies']) && isset($this->_options['copies']['folder'])) {
 			$this->_options['copies'] = [$this->_options['copies']];
 		}
 		return $this->_options;
