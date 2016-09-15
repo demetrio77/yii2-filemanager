@@ -246,7 +246,7 @@ class File extends Model
 		}
 	}
 	
-	public function uploadByLink($url, $filename, $tmp)
+	public function uploadByLink($url, $filename, $ext, $tmp)
 	{
 		if (!$this->alias->can) {
 			return ['status' => 'error', 'message' => 'Не хватает прав'];
@@ -257,10 +257,10 @@ class File extends Model
 			'Alias' => $this->_alias
 		]);
 		
-		return $Uploader->byLink($url, ['name' => $filename, 'tmp' => $tmp] );
+		return $Uploader->byLink($url, ['name' => $filename, 'ext' => $ext, 'tmp' => $tmp] );
 	}
 	
-	public function upload($filename)
+	public function upload($filename, $ext)
 	{
 		if (!$this->alias->can) {
 			return ['status' => 'error', 'message' => 'Не хватает прав'];
@@ -271,7 +271,7 @@ class File extends Model
 			'Alias' => $this->_alias
 		]);
 		
-		return $Uploader->upload(['name' => $filename] );
+		return $Uploader->upload(['name' => $filename, 'ext' => $ext] );
 	}
 	
 	

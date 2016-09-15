@@ -1390,8 +1390,7 @@
                 					maxSize: 250 * FileAPI.MB,
                 					autoUpload: false,
                 				    data: { 
-                				    	'_csrf' : csrfToken, 
-                				    	filename: ''
+                				    	'_csrf' : csrfToken
                 				    },
                 					elements: {
                 						ctrl: { upload: '.upload-start' },
@@ -1421,7 +1420,8 @@
                 				        }
                 				    },
                 				    onBeforeUpload: function (evt, uiEvt) {
-                				    	uiEvt.widget.options.data.filename = me.uploadNameInput.val().trim() + (me.uploadExt.text() ? '.' + me.uploadExt.text().trim(): ''); 
+                				    	uiEvt.widget.options.data.filename = me.uploadNameInput.val().trim();
+                				    	uiEvt.widget.options.data.ext = me.uploadExt.text().trim();
                 				    },
                 				    onSelect: function (evt, ui){
                 				    	var file = ui.files[0];
@@ -1501,7 +1501,8 @@
                 					}
 
                 					var link = me.linkInput.val().trim();
-                					var filename =  me.linkNameInput.val().trim() + (me.linkExt.text()? '.' + me.linkExt.text().trim(): "");
+                					var filename =  me.linkNameInput.val().trim();
+                					var ext = me.linkExt.text();
                 					var tmp = Math.floor(Math.random() * 998999)+1000;
 
 	             	                var interval = setInterval(function() {
@@ -1519,7 +1520,7 @@
              	                    }, 100);
 	             	                   
              	                    $.ajax({
-             	                       data: {link:link,filename:filename,_csrf: csrfToken},
+             	                       data: {link:link,filename:filename,ext:ext,_csrf: csrfToken},
              	                       async:true, dataType:'json',method:'POST',
              	                       url: $this.settings.connector + '?action=link&options[alias]=' + item.alias + '&options[path]='+item.path()+'&options[tmp]='+tmp,
              	                       success:function(result){

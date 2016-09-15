@@ -47,8 +47,17 @@ class Uploader extends Object
 			$this->naming($options['uploadname']);
 		}
 		
-		if (isset($options['name']) && $options['name']=='{{time}}') {
-			$this->name = time();
+		if (isset($options['name'])) {
+			if ($options['name']=='{{time}}') {
+				$this->name = time();
+			}
+			else {
+				$this->name = $options['name'];
+			}
+		}
+		
+		if (isset($options['ext']) && $options['ext']){
+			$this->extension = $options['ext'];
 		}
 		
 		if ($this->Alias->slugify) {

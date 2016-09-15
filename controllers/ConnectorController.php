@@ -344,8 +344,9 @@ class ConnectorController extends BaseController
 		
 		$url = Yii::$app->request->post('link');
 		$filename = Yii::$app->request->post('filename');
+		$ext = Yii::$app->request->post('ext');
 		
-		return $Folder->uploadByLink($url, $filename, $tmp, isset($options['force']));
+		return $Folder->uploadByLink($url, $filename, $ext, $tmp, isset($options['force']));
 	}
 	
 	private function _uploadAction($options)
@@ -368,8 +369,9 @@ class ConnectorController extends BaseController
 		}
 	
 		$filename = Yii::$app->request->post('filename');
-	
-		return $Folder->upload($filename, isset($options['force']));
+		$ext = Yii::$app->request->post('ext');
+		
+		return $Folder->upload($filename, $ext, isset($options['force']));
 	}
 	
 	private function _progressAction($options)
@@ -425,6 +427,6 @@ class ConnectorController extends BaseController
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		$File = new File(['aliasId' => $alias, 'path' => $path]);
 		
-		return ArrayHelper::merge( $File->item(), ['url' => $File->url]);
+		return $File->exists ? ArrayHelper::merge( $File->item(), ['url' => $File->url]) : ['status' => 'missed'];
 	}
 }
