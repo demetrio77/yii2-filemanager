@@ -210,10 +210,14 @@ class Image extends Object
 				return $this->_turnImage($cnt, $options['turn']);
 			break;
 			case 'watermark':
+				$saveOwn = false;
 				if (!isset($options['watermark'])) {
 					$options['watermark'] = 3;
 				}
-				return $this->_waterMarkImage($cnt, $options['watermark']);
+				if (isset($options['own'])){
+					$saveOwn = true;
+				}
+				return $this->_waterMarkImage($cnt, $options['watermark'], $saveOwn);
 			break;
 		}
 	}
@@ -351,7 +355,7 @@ class Image extends Object
 		];
 	}
 	
-	private function _watermarkImage($cnt, $position)
+	private function _watermarkImage($cnt, $position, $saveOwn=false)
 	{
 		if (!isset($this->File->alias->image['watermark'])) {
 			return [
@@ -360,7 +364,7 @@ class Image extends Object
 			];
 		}
 
-		$file = $this->getTmpImage($cnt);
+		$file = $saveOwn ?  $this->File->absolute : $this->getTmpImage($cnt);
 		$Imagick = new \Imagick($file);
 		$Watermark = new \Imagick(Yii::getAlias($this->File->alias->image['watermark']));
 		
@@ -368,7 +372,8 @@ class Image extends Object
 		$heightImage = $Imagick->getimageheight();
 		$widthWm = $Watermark->getimagewidth();
 		$heightWm = $Watermark->getimageheight();
-		$margin = 20;
+		$margin = 5;
+		
 		switch ($position) {
 			case 1: //левый верхний
 				$x = $margin;
@@ -392,7 +397,7 @@ class Image extends Object
 			break;
 		}		
 		
-		if ($Imagick->compositeimage($Watermark, \imagick::COMPOSITE_OVER, $x, $y) && $Imagick->writeimage($this->getTmpImage($cnt + 1))) {
+		if ($Imagick->compositeimage($Watermark, \imagick::COMPOSITE_OVER, $x, $y) && $Imagick->writeimage( $saveOwn ? null: $this->getTmpImage($cnt + 1))) {
 			return [
 				'status' => 'success',
 				'cnt' => $cnt+1,
