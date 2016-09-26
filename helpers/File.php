@@ -353,12 +353,12 @@ class File extends Model
 			return "$bytes байт";
 		}
 		if ($bytes < 1024*1024) {
-			return  round($bytes/1024).' Кб'; 
+			return  round($bytes/1024).'&nbsp;Кб'; 
 		}
 		if ($bytes < 1024*1024*1024) {
-			return  round($bytes/(1024*1024),1).' Мб';
+			return  round($bytes/(1024*1024),1).'&nbsp;Мб';
 		}
 		
-		return  round($bytes/(1024*1024*1024),1).' Гб';
+		return  round($bytes/(1024*1024*1024),1).'&nbsp;Гб';
 	} 
 }
