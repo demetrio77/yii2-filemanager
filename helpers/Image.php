@@ -73,6 +73,7 @@ class Image extends Object
 			$options = [];
 			if (isset($this->options['height']))  $options['height'] = $this->options['height'];
 			if (isset($this->options['width']))  $options['width'] = $this->options['width'];
+			if (isset($this->options['keepOrientation'])) $options['keepOrientation'] = $this->options['keepOrientation'];
 			$this->makeProportions($options);
 		}
 		
@@ -91,7 +92,8 @@ class Image extends Object
 					$options = [];
 					if (isset($copy['height']))  $options['height'] = $copy['height'];
 					if (isset($copy['width']))  $options['width'] = $copy['width'];
-					
+					if (isset($copy['keepOrientation'])) $options['keepOrientation'] = $copy['keepOrientation'];
+						
 					$this->makeProportions($options, $fullpath);
 				}
 			}
@@ -156,6 +158,12 @@ class Image extends Object
 			
 			$width = $this->imagick->getimagewidth();
 			$height = $this->imagick->getimageheight();
+			
+			if ( ($width-$height)*($size['width']-$size['height'])<0 && isset($size['keepOrientation']) && $size['keepOrientation']) {
+				$w = $size['width'];
+				$size['width']=$size['height'];
+				$size['height'] = $w;
+			}
 			
 			$originalRatio = $width/$height;
 			$expectRatio = $size['width']/$size['height'];
