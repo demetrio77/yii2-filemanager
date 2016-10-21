@@ -12,7 +12,6 @@ use yii\web\AssetBundle;
 class FileApiAsset extends AssetBundle
 {
     public $sourcePath = '@demetrio77/manager/assets/fileapi';
-    public $css = ['statics/main.css'];
-    public $js = ['FileAPI/FileAPI.min.js', 'FileAPI/FileAPI.exif.js', 'jquery.fileapi.min.js'];
+    public $js = ['FileAPI/FileAPI.min.js', 'jquery.fileapi.min.js'];
     public $depends = ['yii\web\JqueryAsset'];
 }
