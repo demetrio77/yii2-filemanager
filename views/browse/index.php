@@ -18,7 +18,7 @@ $this->registerJs("
 		configuration: 'none',
 		alias: '$alias',
 		destination: {
-			type: 'uploader',
+			type: '$destination',
 			id: '$id'
 		}
 	});

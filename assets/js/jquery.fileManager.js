@@ -1576,11 +1576,15 @@
                 	
                 	this.select = function(id) {
                 		var item = model.data[id];
+                		
                 		if ($this.settings.destination.type=='ckeditor') {
                 			window.opener.CKEDITOR.tools.callFunction( $this.settings.destination.CKEditorFuncNum, item.url());
                 		}
                 		else if ($this.settings.destination.type=='uploader'){
                 			window.opener.FILEUPLOADER.set($this.settings.destination.id, {path: item.path(), url: item.url()});
+                		}
+                		else if ($this.settings.destination.type=='input'){
+                			window.opener.document.getElementById($this.settings.destination.id).value =  $this.settings.fileWithPath ? item.path() : item.url();
                 		}
                         window.close();
                 	};

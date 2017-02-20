@@ -8,14 +8,15 @@ class BrowseController extends BaseController
 {
 	public $layout = 'main';
 	
-	public function actionIndex($alias, $path='', $fileName='', $returnPath=0, $id='')
+	public function actionIndex($alias, $path='', $fileName='', $returnPath=0, $id='', $destination='uploader')
 	{
 		return $this->render('index', [
 			'alias' => $alias,
 			'path' => $path,
 			'filename' => $fileName,
 			'returnPath'=>$returnPath,
-			'id' => $id
+			'id' => $id,
+		    'destination' => $destination
 		]);
 	}
 }
