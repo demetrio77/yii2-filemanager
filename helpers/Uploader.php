@@ -10,14 +10,129 @@ use yii\web\UploadedFile;
 use demetrio77\smartadmin\helpers\TransliteratorHelper;
 
 /**
- * @property demetrio77\manager\helpers\File $Folder
- * @property demetrio77\manager\helpers\Alias $Alias
+ * @property demetrio77\manager\helpers\File $DestinationFolder
+ * @property demetrio77\manager\helpers\File $SavedFile
  * @author dk
  *
  */
-class Uploader extends Object
+class Uploader
 {
-	public $Folder;
+    private $DestinationFolder;
+    private static $progressTmpFileName = 'tmp.dat';
+    
+    public function __construct($Folder)
+    {
+        if (!$Folder->exists) {
+            $Folder->createDirectory();
+        }
+        
+        if (!$Folder->isFolder()){
+            throw new \Exception('Не найдена папка для копирования');
+        }
+        
+        $this->DestinationFolder = $Folder;
+    }
+    
+    public function getBaseName($filename, $extension, $forceToRewrite)
+    {
+        $filename = Inflector::slug(TransliteratorHelper::process($filename));
+        
+        if ($forceToRewrite) {
+            return $filename . ($extension ? '.' . $extension : '');
+        }
+        
+        $current = '';
+        do {
+            $currentBase = $filename . $current . ($extension ? '.' . $extension : '');
+            $current++;
+        }
+        while($this->DestinationFolder->checkFolderToFileExists($currentBase));
+        return $currentBase;
+    }
+    
+    public function upload($uploaderInstanceName, $filename, $extension, $forceToRewrite=false)
+	{
+	    $Instance = UploadedFile::getInstanceByName($uploaderInstanceName);
+	    $baseName = $this->getBaseName($filename, $extension, $forceToRewrite);
+	    
+	    $SavedFile = new File($this->DestinationFolder->alias->id, $this->DestinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );
+	    
+	    if ($Instance->saveAs($SavedFile->path)) {
+	        return $SavedFile;
+	    }
+	    
+	    switch ($Instance->error) {
+	        case UPLOAD_ERR_INI_SIZE: $message = 'Размер принятого файла превысил максимально допустимый размер'; break;
+	        case UPLOAD_ERR_FORM_SIZE: $message = 'Размер загружаемого файла превысил значение MAX_FILE_SIZE, указанное в HTML-форме'; break;
+	        case UPLOAD_ERR_PARTIAL: $message = 'Загружаемый файл был получен только частично'; break;
+	        case UPLOAD_ERR_NO_FILE: $message = 'Файл не был загружен'; break;
+	        case UPLOAD_ERR_NO_TMP_DIR: $message = 'Отсутствует временная папка'; break;
+	        case UPLOAD_ERR_CANT_WRITE: $message = 'Не удалось записать файл на диск.'; break;
+	        case UPLOAD_ERR_EXTENSION: $message = 'PHP-расширение остановило загрузку файла'; break;
+	        default: $message = 'Произошла непредвиденная ошибка'; break;
+	    }
+	    
+	    throw new \Exception($message);
+	}
+	
+	public function byLink($url, $filename=false, $extension=false, $tmp=0, $forceToRewrite=false)
+	{
+	    if (!$filename) {
+	        list($filename, $extension) = self::getFileNameByUrl($url);
+	    }
+	    
+	    $baseName = $this->getBaseName($filename, $extension, $forceToRewrite);
+	    $SavedFile = new File($this->DestinationFolder->alias->id, $this->DestinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );
+	    
+	    if ($tmp) {
+	        self::$progressTmpFileName = $tmp;
+	    }
+	    
+	    $ch = curl_init();	    
+	    curl_setopt($ch, CURLOPT_HEADER, 0);
+	    curl_setopt($ch, CURLOPT_URL, $url);
+	    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+	    curl_setopt($ch, CURLOPT_USERAGENT, "User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11");
+	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+	    curl_setopt($ch, CURLOPT_NOPROGRESS, FALSE);
+	    curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, array($this, 'apiUploadCallback'));
+	    $result = curl_exec($ch);
+	    
+	    if (!$result || curl_errno($ch)) {
+	        $message = curl_error($ch).'('.curl_errno($ch).')';
+	        curl_close($ch);
+	        throw new \Exception($message);
+	    }
+	    
+	    curl_close($ch);
+	    
+	    if (($f = @fopen($SavedFile->path , 'w'))===false) {
+	        throw new \Exception('Невозможно открыть файл для записи');
+	    }
+	    
+	    if (!fwrite($f, $result)) {
+	        throw new \Exception('Не удалось сохранить результат');
+	    }
+	        
+	    fclose($f);
+	    
+	    if (file_exists(self::getProgressTmpFile())) {
+	        unlink(self::getProgressTmpFile());
+	    }
+
+	    return $SavedFile;
+	}
+	
+	public static function getFileNameByUrl($url)
+	{
+	    $path = parse_url($url, PHP_URL_PATH);
+	    $pathinfo = pathinfo($path);
+	    return [$pathinfo['filename'], $pathinfo['extension']??''];
+	}
+
+
+    /*public $Folder;
 	public $Alias;
 	
 	private $_progressTmpFile = 'tmp.dat';
@@ -121,121 +236,34 @@ class Uploader extends Object
 		$this->name = $checkName;
 	}
 	
-	public function getProgressTmpFile() 
+	*/
+	public static function getProgressTmpFile() 
 	{
-		if (!$this->_progressTmpFile) {
-			$this->_progressTmpFile = 'tmp.dat';
-		}
-    	return \Yii::getAlias('@runtime/'.$this->_progressTmpFile);
+		return \Yii::getAlias('@runtime/'.self::$progressTmpFileName);
     }
+	
 	
 	private function apiUploadCallback( $res, $total, $get, $dm ) 
     {
          if ($total>0) {
              $percent = round(100*$get/$total);
-             $f = fopen($this->progressTmpFile, 'w');
+             $f = fopen(self::getProgressTmpFile(), 'w');
              fwrite($f, Json::encode(['get'=>$get,'total'=>$total]));
              fclose($f);
          }
     }
-	
-	public function byLink($url, $options=  [])
+		
+	public static function getProgress($tmp)
 	{
-		$this->getName(ArrayHelper::merge($options, ['url' => $url ]));
-		
-		$File = new File(['aliasId' => $this->Alias->id, 'path' => $this->Folder->path . DIRECTORY_SEPARATOR . $this->name . ($this->extension ? '.' . $this->extension : '') ]);
-		
-		if (isset($options['tmp'])) {
-			$this->_progressTmpFile = (int)$options['tmp'];
-		}	
-		
-		$ch = curl_init();
-		
-		curl_setopt($ch, CURLOPT_HEADER, 0);
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-		curl_setopt($ch, CURLOPT_USERAGENT, "User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11");
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($ch, CURLOPT_NOPROGRESS, FALSE);
-		curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, array($this, 'apiUploadCallback'));
-		 
-		$result = curl_exec($ch);
-		
-		if (!$result) {
-			$message = curl_error($ch).'('.curl_errno($ch).')';
-			curl_close($ch);
-			return ['status' => 'error', 'message' => $message];
-		}
-		curl_close($ch);
-		
-		$f = fopen($File->absolute , 'w');
-		fwrite($f, $result);
-		fclose($f);
-		
-		if (file_exists($this->progressTmpFile)) {
-			unlink($this->progressTmpFile);
-		}
-			
-		if ($File->isImage) {
-			if ($this->Alias->thumbs!==false) {
-				$File->thumb->create();
-			}
-			if ($this->Alias->image!==false) {
-				$File->image->create();
-			}
-		}
-		
-		return [
-			'status' => 'success',
-			'file' => $File->item(),
-			'url'=>$File->url,
-			'path'=>ltrim($File->path, DIRECTORY_SEPARATOR)
-		];
-	}
-	
-	public function upload($options=[])
-	{
-		$file = UploadedFile::getInstanceByName('file');
-		
-		$name = $this->getName(ArrayHelper::merge($options, ['uploadname' => $file->name ]));
-		
-		$File = new File(['aliasId' => $this->Alias->id, 'path' => $this->Folder->path . DIRECTORY_SEPARATOR . $name ]);
-		
-		if ($file->saveAs($File->absolute)) {			
-			
-			if ($File->isImage) {
-				if ($this->Alias->thumbs!==false) {
-					$File->thumb->create();
-				}
-				if ($this->Alias->image!==false) {
-					$File->image->create();
-				}
-			}
-			
-			return [
-				'status' => 'success',
-				'file' => $File->item(),
-				'url'=>$File->url,
-				'path'=>ltrim($File->path, DIRECTORY_SEPARATOR)
-			];
-		}
-		
-		return [
-			'status' => 'error',
-			'message' => $this->getError($file->error)
-		];
-	}
-	
-	public function getProgress($tmp)
-	{
-		$this->_progressTmpFile = (int)$tmp;
+		self::$progressTmpFileName = (int)$tmp;
 		
 		$s='';
-		if (file_exists($this->progressTmpFile)) {
-			$f = fopen($this->progressTmpFile, 'r');
-			$s = Json::decode(fread($f, 4096));
-			fclose($f);
+		if (file_exists(self::getProgressTmpFile())) {
+		    $f = fopen(self::getProgressTmpFile(), 'r');
+		    $s = fread($f, 4096);
+		    fclose($f);
+		    if (!$s) return '';
+			$s = Json::decode($s);
 		}
 		return $s;
 	}

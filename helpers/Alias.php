@@ -2,167 +2,116 @@
 
 namespace demetrio77\manager\helpers;
 
+use Yii;
 use demetrio77\manager\Module;
-use yii\base\Model;
 use yii\helpers\ArrayHelper;
+use yii\base\Object;
+use yii\helpers\FileHelper;
 
-class Alias extends Model
+/**
+ * 
+ * @author dk
+ * @property string $fullpath
+ * @property string $fullurl
+ * @property array $item
+ *
+ */
+class Alias extends Object
 {
+    private static $_aliases = [];
+    private $module;
 	public $id;
 	public $folder;
 	public $url;
 	public $label;
-	public $image = false;	
+	public $image = false;
 	public $thumbs = false;
 	public $slugify = true;
 	public $rewriteIfExists = false;
 	public $rights = [];
-	public $mkdir = true;
-	public $copy = true;
-	public $cut = false;
-	public $paste = true;
-	public $remove = false;
-	public $rename = false;
-	public $userInstance = '';
-	
-	public function init(){
-		$module = Module::getInstance();
-		
-		$this->userInstance = $module->userInstance;
-		$this->thumbs = $module->thumbs;
-		$this->rewriteIfExists = $module->rewriteIfExists;
-		$this->slugify = $module->slugify;
-		$this->mkdir = $module->mkdir;
-		$this->copy = $module->copy;
-		$this->cut = $module->cut;
-		$this->paste = $module->paste;
-		$this->remove = $module->remove;
-		$this->rename = $module->rename;
-		$this->rights = $module->rights;
+
+	public function init()
+	{
+		$this->module = Module::getInstance();
+		$this->thumbs = $this->module->thumbs;
+		$this->rewriteIfExists = $this->module->rewriteIfExists;
+		$this->slugify = $this->module->slugify;
+		$this->rights = $this->module->rights;
 		
 		parent::init();
 		
-		if (is_array($module->image) && is_array($this->image)) {
-			$this->image = ArrayHelper::merge($module->image, $this->image);
+		if (is_array($this->module->image) && is_array($this->image)) {
+		    $this->image = ArrayHelper::merge($this->module->image, $this->image);
 		}
-		elseif (is_array($module->image)) {
-			$this->image = $module->image;
+		elseif (is_array($this->module->image)) {
+		    $this->image = $this->module->image;
 		}
-	}
-	
-	public function inConfig($configuration)
-	{
-		$module = Module::getInstance();
-		$config = $module->configurations[$configuration];
-		return in_array($this->id, $config);
 	}
 	
 	public function getFullpath()
 	{
-		return \Yii::getAlias($this->folder);
+	    return FileHelper::normalizePath(Yii::getAlias($this->folder));
 	}
 	
 	public function getFullUrl()
 	{
-		return \Yii::getAlias($this->url);
+	    return FileHelper::normalizePath(Yii::getAlias($this->url));
 	}
 	
-	public function getCan()
+	public function getItem()
 	{
-		if (empty($this->rights)) return true;
-		if (!is_array($this->rights)) {
-			$this->rights = [$this->rights];
-		}
-		$user = \Yii::$app->{ $this->userInstance };
-		foreach ($this->rights as $right) {
-			if ($user->can($right)) {
-				return true;
-			}
-		}
-		
-		return false;
+	    return [
+	        'name' => $this->label,
+	        'isFolder' => true,
+	        'alias' => $this->id,
+	        'href' =>  $this->fullurl,
+	        'thumb' => '',
+	        
+	        'mkdir' => true,
+	        'copy' => true,
+	        'cut' => true,
+	        'paste' => true,
+	        'rename' => true,
+	        'remove' => true
+	    ];
 	}
 	
-	public function loadFromArray($array) {
-		foreach ($array as $key => $value) {
-			if(property_exists($this, $key)) {
-				if (is_array($value) && is_array($this->{$key})) {
-					$this->{$key} = ArrayHelper::merge($this->{$key}, $value);
-				}
-				else {
-					$this->{$key} = $value;
-				}
-			}
-		}
-	}
-	
-	public static function getRoot($configuration = 'default')
+	public function extractPathFromUrl($url)
 	{
-		$module = Module::getInstance();
-		$config = $module->configurations[$configuration];
-		
-		$folders = [];
-		
-		foreach ($config as $alias) {
-			$Alias = self::findById($alias);
-			if ($Alias->can) $folders[] = [
-				'name' => $Alias->label,
-				'href' => $Alias->fullUrl, 
-				'alias' => $Alias->id,
-				'thumb' => \Yii::getAlias($Alias->thumbs['url']),
-				'isFolder' => true,
-				'mkdir' => $Alias->mkdir,
-				'copy' => $Alias->copy,
-				'cut' => $Alias->cut,
-				'paste' => $Alias->paste,
-				'rename' => $Alias->rename,
-				'remove' => $Alias->remove
-			];
-		}
-		
-		return ['folders' => $folders];
+	    $explode = explode($this->url, $url);
+	    if (count($explode)>1) {
+	        return FileHelper::normalizePath($explode[1]);
+	    }
+	    return false;
 	}
 	
-	public function asRoot()
+	public function extractPathFromFullpath($path)
 	{
-		$folders = [];
-		if ($this->can) {
-			$folders [] = [
-				'name' => $this->label,
-				'href' => $this->fullUrl,
-				'alias' => $this->id,
-				'thumb' => \Yii::getAlias($this->thumbs['url']),
-				'isFolder' => true,
-				'mkdir' => $this->mkdir,
-				'copy' => $this->copy,
-				'cut' => $this->cut,
-				'paste' => $this->paste,
-				'rename' => $this->rename,
-				'remove' => $this->remove		
-			];
-		}
-		return ['folders' => $folders];
-	}  
+	    $explode = explode($this->fullpath, $path);
+	    if (count($explode)>1) {
+	        return FileHelper::normalizePath($explode[1]);
+	    }
+	    return false;
+	}
 	
 	public static function findById($id)
 	{
+	    if (isset(self::$_aliases[$id])) return self::$_aliases[$id];
 		$module = Module::getInstance();
-		if(!isset($module->aliases[$id])) {
-			return false;
+	    if (!isset($module->aliases[$id])) {
+			throw new \Exception('Не найден алиас');
 		}
-		$Alias = new self();
-		$array = $module->aliases[$id];
-		$array['id'] = $id;
-		$Alias->loadFromArray($array);		
-		return $Alias;
+		self::$_aliases[$id] = new self(ArrayHelper::merge($module->aliases[$id], ['id' => $id ]));
+		return self::$_aliases[$id];
 	}
 	
 	public static function findByUrl($file, $configuration='')
 	{
-		$module = Module::getInstance();
-		
-		$s = explode('://', $file);
+	    $module = Module::getInstance();
+	    
+	    $s = explode('://', $file);
 		$scheme = '';
+		
 		if (count($s)==2) {
 			$scheme = $s[0].'://';
 			$file = $s[1];
@@ -181,7 +130,7 @@ class Alias extends Model
 			}
 		}
 		else {
-			foreach ($module->configurations[$configuration] as $aliasId){
+			foreach ($configurations[$configuration] as $aliasId){
 				$Urls[$aliasId] = $module->aliases[$aliasId]['url'];
 			}
 		}
@@ -199,18 +148,18 @@ class Alias extends Model
 			return self::findById($found);
 		}
 		
-		return false;
+		return null;
 	}
 	
 	public static function findByPath($filename)
 	{
-		$module = Module::getInstance();
-		
 		$path = explode('/', $filename);
+		
+		$module = Module::getInstance();
 		
 		$Urls = [];
 		foreach ($module->aliases as $id => $options) {
-			$Folders[$id] = \Yii::getAlias($options['folder']);
+			$Folders[$id] = Yii::getAlias($options['folder']);
 		}
 		
 		$found = false;
@@ -226,6 +175,6 @@ class Alias extends Model
 			return self::findById($found);
 		}
 		
-		return false;
-	} 
+		return null;
+	}
 }

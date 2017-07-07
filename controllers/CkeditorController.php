@@ -10,10 +10,10 @@ class CkeditorController extends BaseController
 	
 	public function actionIndex($configuration = 'default')
 	{
-		$CKEditor = Yii::$app->request->get('CKEditor');
-		$langCode = Yii::$app->request->get('langCode');
-		$CKEditorFuncNum = Yii::$app->request->get('CKEditorFuncNum');
-		$alias = Yii::$app->request->get('alias');
+		$CKEditor = Yii::$app->request->get('CKEditor', '');
+		$langCode = Yii::$app->request->get('langCode', 'ru');
+		$CKEditorFuncNum = Yii::$app->request->get('CKEditorFuncNum', '');
+		$alias = Yii::$app->request->get('alias', false);
 		$defaultFolder = Yii::$app->request->get('defaultFolder', ['alias' => 'pages', 'path' => date('Y/m/d')]);
 		
 		return $this->render('index', [

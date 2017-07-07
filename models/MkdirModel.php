@@ -13,16 +13,7 @@ class MkdirModel extends Model
 	{
 		return [
 			['name', 'required'],
-			['name', 'uniqueInFolder']
 		];
-	}
-	
-	public function uniqueInFolder()
-	{
-		if (file_exists($this->folder . DIRECTORY_SEPARATOR. $this->name)) {
-			return $this->addError('name', 'Папка с таким именем уже существует');
-		}
-		return true;
 	}
 	
 	public function attributeLabels()
@@ -35,7 +26,7 @@ class MkdirModel extends Model
 	public static function loadFromFile($File)
 	{
 		return new static([
-			'folder' => $File->absolute
+			'folder' => $File->path
 		]);
 	}
 }

@@ -15,6 +15,6 @@ class ModuleAsset extends AssetBundle
 		'demetrio77\manager\assets\JqueryUiAsset',
 		'demetrio77\manager\assets\JqueryContextmenuAsset',
 		'demetrio77\manager\assets\FileApiAsset',
-		'demetrio77\manager\assets\JqueryCropAsset',
+		'demetrio77\manager\assets\JqueryCropAsset'
 	];
 }

@@ -14,6 +14,9 @@ use demetrio77\manager\helpers\Uploader;
 use demetrio77\manager\helpers\Image;
 use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
+use demetrio77\manager\helpers\Listing;
+use demetrio77\manager\helpers\Configuration;
+use demetrio77\manager\helpers\FileExistsException;
 
 class ConnectorController extends BaseController
 {
@@ -21,367 +24,351 @@ class ConnectorController extends BaseController
 	{
 		switch ($action) {
 			case 'init':
-				return $this->_initAction();
+				return $this->actionInit();
 			case 'folder': 
-				return $this->_folderAction($options );
+				return $this->actionFolder($options );
 			case 'rename':
-				return $this->_renameAction($options);
+				return $this->actionRename($options);
 			case 'refresh':
-				return $this->_refreshAction( $options );
+				return $this->actionRefresh( $options );
 			case 'mkdir':
-				return $this->_mkdirAction($options);
+				return $this->actionMkdir($options);
 			case 'delete':
-				return $this->_deleteAction($options);
+				return $this->actionDelete($options);
 			case 'paste':
-				return $this->_pasteAction($options);
+				return $this->actionPaste($options);
 			case 'existrename':
-				return $this->_existrenameAction($options);
+				return $this->actionExistrename($options);
 			case 'link':
-				return $this->_linkAction($options);
+				return $this->actionLink($options);
 			case 'progress':
-				return $this->_progressAction($options);
+				return $this->actionProgress($options);
 			case 'upload':
-				return $this->_uploadAction($options);
+				return $this->actionUpload($options);
 			case 'image': 
-				return $this->_imageAction($options);
+				return $this->actionImage($options);
 			case 'saveimage':
-				return $this->_saveImageAction($options);
+				return $this->actionSaveImage($options);
 			case 'item':
-				return $this->_itemAction($options);
+				return $this->actionItem($options);
 		}
 	}
 	
-	private function _initAction()
+	public function actionInit()
 	{
+	    Yii::$app->response->format = Response::FORMAT_JSON;
+	    
+	    $init   = Yii::$app->request->post('init', ['type'=>'configuration', 'value'=>'default']);
+	    $loadTo = Yii::$app->request->post('loadTo', false);
+	  
+	    $Listing = new Listing($init['type'], $init['value']);
+		try {
+		    $items = $Listing->getTill($loadTo['value'], $loadTo['type'], isset($loadTo['withPath'])?$loadTo['withPath']:false);
+		    return [
+		        'found' => true,
+		        'json' =>$items
+		    ];
+		} catch (\Exception $e) {
+		    return [
+		        'found' => false,
+		        'message' => 'Произошла ошибка'
+		    ];
+		}
+	}
+	
+	public function actionFolder($options) 
+	{
+		$Path = $options['path']?? '';
+		$aliasId =  $options['alias'] ?? '';
+		$configurationName = $options['configuration'] ?? 'default';
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		
-		$init = Yii::$app->request->post('init');
-		$loadTo = Yii::$app->request->post('loadTo');
-		
-		$return = [];
-		switch ($init['type']) {
-			case 'configuration':
-				$return[0] = Alias::getRoot($init['value']);
-			break;
-			case 'alias':
-				$Alias = Alias::findById($init['value']);
-				if (!$Alias || !$Alias->can) {
-					return [
-						'found' => false,
-						'json' => $return,
-						'message' => 'Не найден Алиас или на него нет прав'
-					];
-				}
-				$return[0] = $Alias->asRoot();
-			break;
-			default: return [
-				'found' => false
-			];
+		if ($configurationName!='none') {
+		    $Configuration = new Configuration($configurationName);
+		    if (!$Configuration->has($aliasId)) {
+		        throw new NotFoundHttpException();
+		    }
 		}
 		
-		if (isset($loadTo['type'])) switch ($loadTo['type']) {
-			case 'file':
-				if (isset($Alias) && $Alias->can) {
-					$file = $loadTo['value'];
-					
-					if (!$loadTo['withPath']) {
-						$p = explode($Alias->url, $file);
-						
-						if (count($p)!=2) {
-							return [
-								'found' => false,
-								'json' => $return,
-								'message' => 'Неверный url'
-							];
-						}
-						
-						$p = explode('/', trim($p[1],'/'));
-					}
-					else {
-						$p = explode('/', trim($file,'/'));
-					}
-					
-					if (!file_exists(Yii::getAlias($Alias->folder).'/'.implode('/',$p))) {
-						return [
-							'found' => false,
-							'json' => $return,
-							'message' => 'Файл не найден '.Yii::getAlias($Alias->folder).'/'.implode('/',$p)
-						];
-					}
-					
-					$cur = '';
-					
-					foreach ($p as $uid) {
-						$return[ $Alias->id. ($cur!='' ?DIRECTORY_SEPARATOR :''). $cur ] = $this->getData(['configuration' => 'none', 'alias'=>$Alias->id, 'path' => $cur]);
-						$cur .= ($cur!='' ? DIRECTORY_SEPARATOR: '').$uid;
-					}
-				}				
-			break;
-			case 'folder':
-				$alias = $loadTo['value']['alias'];
-				$path =  $loadTo['value']['path'];
-				
-				$Folder = new File(['aliasId' => $alias, 'path' => $path ]);
-				
-				if (!$Folder->alias->can) break;
-				
-				if (!$Folder->exists || !$Folder->isFolder) {
-					FileHelper::createDirectory($Folder->absolute);
-				}
-				
-				$p = ArrayHelper::merge([''], explode('/', trim($path,'/')));
-				$cur = '';
-				
-				foreach ($p as $uid) {
-					$cur .= ($cur!='' ? DIRECTORY_SEPARATOR: '').$uid;
-					$return[ $Folder->alias->id. ($cur!='' ?DIRECTORY_SEPARATOR :''). $cur ] = $this->getData(['configuration' => 'none', 'alias'=>$alias, 'path' => $cur]);
-				}
-			break;
+		$Folder = new File($aliasId, $Path);
+		
+		if (!$Folder->exists || !$Folder->isFolder()){
+		    return [
+		        'found' => false,
+		        'json' => [],
+		        'message' => 'Не найдена папка'
+		    ];
 		}
 		
-		return [
-			'found' => true,
-			'json' => $return
-		];
+		return Listing::getFolder($Folder);
 	}
 	
-	private function _folderAction( $options) 
+	public function actionRename($options)
 	{
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
-		$configuration = isset($options['configuration']) ? $options['configuration'] : 'default';
-		Yii::$app->response->format = Response::FORMAT_JSON;
-		return $this->getData(['configuration'=>$configuration, 'alias'=>$alias, 'path' =>$path]);
-	}
-	
-	public function getData($options)
-	{
-		$Folder = new File(['aliasId' => $options['alias'], 'path' => $options['path']]);
-		if ($Folder===false || !$Folder->exists || !$Folder->isFolder || ($options['configuration']!='none' && !$Folder->alias->inConfig($options['configuration']))) {
-			return [
-				'found' => false,
-				'json' => [],
-				'message' => 'Не найдена папка'
-			];
-		}
-		if (!$Folder->alias->can) {
-			return [
-				'found' => false,
-				'json' => [],
-				'message' => 'Не хватает прав'
-			];
-		}
-		return FileSystem::folder($Folder);
-	}
-	
-	private function _renameAction($options)
-	{
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
-		$file = isset($options['file']) ? $options['file'] : '';
+		$Path = $options['path'] ?? '';
+		$aliasId =  $options['alias'] ?? '';
+		$file = $options['file'] ?? '';
 		
-		$File = new File(['aliasId' => $alias, 'path' => $path]);
+		$File = new File($aliasId, $Path);
 		$model = RenameModel::loadFromFile($File);
 		
 		if (Yii::$app->request->isPost) {
 			Yii::$app->response->format = Response::FORMAT_JSON;
 			$oldName = $File->filename;
 			
-			if ($model->load(Yii::$app->request->post()) && $model->validate() && $File->rename($model->newFilename, $model)) {
-				return [
-					'status' => 'success',
-					'oldName' => $oldName,
-					'filename' => $File->filename
-				];				
-			}
-			else {
-				return [
-					'status' => 'validate',
-					'html' => $this->renderAjax('rename', ['model' => $model])
-				];
-			}
+			if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+				try {
+				    if ($File->rename($model->newFilename)) {
+				        return [
+							'status' => 'success',
+        					'oldName' => $oldName,
+        					'filename' => $File->basename
+        				];
+				    }
+				    $model->addError('newFilename', 'Не удалось переименовать файл или папку');
+				}
+				catch (\Exception $e) {
+				    $model->addError('newFilename', $e->getMessage());
+				};
+			}	
+
+			return [
+				'status' => 'validate',
+				'html' => $this->renderAjax('rename', ['model' => $model])
+			];
 		}
 		else {
 			return $this->renderAjax('rename', ['model' => $model]);
 		}
 	}
 	
-	private function _mkdirAction($options)
+	public function actionMkdir($options)
 	{
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
+		$Path = $options['path'] ?? '';
+		$aliasId =  $options['alias'] ?? '';
 	
-		$File = new File(['aliasId' => $alias, 'path' => $path]);
-		$model = MkdirModel::loadFromFile($File);
+		$ParentFolder = new File($aliasId, $Path);
+		$model = MkdirModel::loadFromFile($ParentFolder);
 	
 		if (Yii::$app->request->isPost) {
 			Yii::$app->response->format = Response::FORMAT_JSON;
 	
-			if ($model->load(Yii::$app->request->post()) && $model->validate() && $File->mkdir($model->name, $model)) {
-				return [
-					'status' => 'success',
-					'name' => $model->name
-				];
+			if ($model->load(Yii::$app->request->post()) && $model->validate()){
+			    try {
+			        if ($ParentFolder->mkdir($model->name)) {
+        				return [
+        					'status' => 'success',
+        					'name' => $model->name
+        				];
+			        }
+			        $model->addError('newFilename', 'Не удалось создать папку');
+			    }
+			    catch (\Exception $e) {
+			        $model->addError('name', $e->getMessage());
+			    };
 			}
-			else {
-				return [
-					'status' => 'validate',
-					'html' => $this->renderAjax('mkdir', ['model' => $model])
-				];
-			}
+			
+			return [
+			   'status' => 'validate',
+			   'html' => $this->renderAjax('mkdir', ['model' => $model])
+			];
 		}
 		else {
 			return $this->renderAjax('mkdir', ['model' => $model]);
 		}
 	}
 	
-	private function _deleteAction($options)
+	public function actionDelete($options)
 	{
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
+		$Path = $options['path'] ?? '';
+		$aliasId =  $options['alias'] ?? '';
 
-		$File = new File(['aliasId' => $alias, 'path' => $path]);
+		$File = new File($aliasId, $Path);
 		
 		if (Yii::$app->request->isPost && Yii::$app->request->post('yes')) {
 			Yii::$app->response->format = Response::FORMAT_JSON;
-			if ($File->delete()) {
-				return [
-					'status' => 'success'
-				];
+			
+			$message = 'Файл невозможно удалить';
+			try {
+			    if ($File->delete()) {
+					return [
+    					'status' => 'success'
+    				];
+			    }
 			}
-			else {
-				return [
-					'status' => 'validate',
-					'html' => 'Файл невозможно удалить'
-				];
+			catch (\Exception $e){
+			    $message = $e->getMessage(); 
 			}
+			
+			return [
+			   'status' => 'validate',
+			   'html' => $message
+			];
 		}
 		else {
 			return $this->renderAjax('delete', [ 'file' => $File ]);
 		}
 	}
 	
-	private function _refreshAction($options)
+	public function actionRefresh($options)
 	{
-		$configuration = isset($options['configuration']) ? $options['configuration'] : 'default';
+		$configurationName = $options['configuration'] ?? 'default';
+		$aliasId =  $options['alias'] ?? '';
+		
 		$folders = Yii::$app->request->post('folders');
 		$result = [];
+		
+		$Listing = new Listing($configurationName=='none'?'alias':'configuration', $configurationName=='none'?$aliasId:$co);
+		
 		foreach ($folders as $folder) {
 			if ($folder['alias']) {
-				$Folder = new File(['aliasId' => $folder['alias'], 'path'=>$folder['path']]);
-				if ($Folder && $Folder->exists && $Folder->isFolder) {
-					$folder['result'] = FileSystem::folder($Folder);
+				$Folder = new File($folder['alias'], $folder['path']);
+				if ($Folder->exists && $Folder->isFolder()) {
+					$folder['result'] = $Listing->getFolder($Folder);
 				}
 			}
 			else {
-				if ($configuration=='none') {
-					$Alias = Alias::findById($options['alias']);
-					$folder['result'] = $Alias->asRoot();
-				}
-				else {
-					$folder['result'] =  Alias::getRoot($configuration);
-				}
+				$folder['result'] =  $Listing->getRoot();
 			}
 			$result[$folder['uid']] = $folder;
 		}
+		
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		return $result;
 	}
 	
-	private function _pasteAction($options)
+	public function actionPaste($options)
 	{
 		$target = Yii::$app->request->post('target');
 		$object = Yii::$app->request->post('object');
 		
 		$type = $options['type'];
-		$newName = isset($_POST['newFilename'])?Yii::$app->request->post('newFilename'):false;
+		$newName = Yii::$app->request->post('newFilename', false);
 		
 		$aliasTarget = $target['alias'];
-		$pathTarget = $target['path'];
-		$aliasObject = $object['alias'];
-		$pathObject = $object['path'];
+		$pathTarget =  $target['path'];
 		
-		$FileTarget = new File(['path' => $pathTarget, 'aliasId' => $aliasTarget]);
-		$FileObject = new File(['path' => $pathObject, 'aliasId' => $aliasObject]);
+		$aliasObject = $object['alias'];
+		$pathObject =  $object['path'];
+		
+		$FileTarget = new File($aliasTarget, $pathTarget);
+		$FileObject = new File($aliasObject, $pathObject);
 				
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		$result = $FileTarget->paste( $FileObject, $newName, $type=='cut');
+		$message = 'Операция закончилась ошибкой';
 		
-		if ($result['status']=='validate') {
-			$result['html'] = $this->renderAjax('newname', ['oldName' => $result['toChange'], 'target' => $target, 'object' => $object, 'File' => $FileObject ]);
+		try {
+		    if ($FileTarget->paste( $FileObject, $newName, $type=='cut')) {
+		        $result = ['status' => 'success'];
+		        if ($newName) {
+		            $result['newName'] = $newName;
+		        }
+		        return $result;
+		    }
 		}
-		
-		return $result;
+		catch (FileExistsException $e) {
+		    return [
+		        'status' => 'validate',
+		        'html' => $this->renderAjax('newname', [
+		            'oldName' => $e->getToChangeName(), 
+		            'File' => $FileObject ]
+		         )
+		    ];
+		}
+		catch (\Exception $e) {
+		    $message = $e->getMessage();
+		}
+		   
+		return ['result' => 'error', 'message' => $message];
 	}
 	
-	private function _existrenameAction($options)
+	public function actionExistrename($options)
 	{
 		$target = $options['target'];
 		$object = $options['object'];
-		$File = new File(['path' => $object['path'], 'aliasId' => $object['alias']]);
-		return $this->renderAjax('newname', ['oldName' => $File->name, 'target' => $target, 'object' => $object, 'File' => $File ]);
+		$File = new File($object['alias'], $object['path']);
+		return $this->renderAjax('newname', ['oldName' => $File->filename, 'target' => $target, 'object' => $object, 'File' => $File ]);
 	}
 	
-	private function _linkAction($options)
+	public function actionLink($options)
 	{
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
-		$tmp =  isset($options['tmp']) ? $options['tmp'] : '';
+	    $Path = $options['path'] ?? '';
+	    $aliasId =  $options['alias'] ?? '';
+		$tmp = $options['tmp'] ?? '';
+		$forceToRewrite = $options['force'] ?? false;
 		
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		$Folder = new File(['aliasId' => $alias, 'path' => $path]);
 		
-		if (!$Folder->exists /*&& isset($options['force'])*/) {
-			FileHelper::createDirectory($Folder->absolute);
-		}
-		
-		if (!$Folder || !$Folder->isFolder) {
-			return [
-				'status' => 'error',
-				'message' => 'Не найдена папка для копирования'
-			];
-		}
+		$Folder = new File($aliasId, $Path);
 		
 		$url = Yii::$app->request->post('link');
 		$filename = Yii::$app->request->post('filename');
-		$ext = Yii::$app->request->post('ext');
+		$extension = Yii::$app->request->post('ext');
 		
-		return $Folder->uploadByLink($url, $filename, $ext, $tmp, isset($options['force']));
+		try {
+		    $Uploader = new Uploader($Folder);
+		    if (($SavedFile = $Uploader->byLink($url, $filename, $extension, $tmp, $forceToRewrite))!==false) {
+		        return [
+		            'status' => 'success',
+		            'file' => $SavedFile->item,
+		            'url'=> $SavedFile->url,
+		            'path'=>$SavedFile->aliasPath
+		        ];
+		    }
+		}
+		catch (\Exception $e) {
+		    $message = $e->getMessage();
+		}
+		
+		return [
+		    'status' => 'error',
+		    'message' => $message
+		];
 	}
 	
-	private function _uploadAction($options)
+	public function actionUpload($options)
 	{
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
-	
+		$Path = $options['path'] ?? '';
+		$aliasId =  $options['alias'] ?? '';
+	    $forceToRewrite = $options['force'] ?? false;
+	    
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		$Folder = new File(['aliasId' => $alias, 'path' => $path]);
 		
-		if (!$Folder->exists /*&& isset($options['force'])*/) {
-			FileHelper::createDirectory($Folder->absolute);
-		}
+		$Folder = new File($aliasId, $Path);
 		
-		if (!$Folder || !$Folder->isFolder) {
-			return [
-				'status' => 'error',
-				'message' => 'Не найдена папка для копирования '.$Folder->absolute
-			];
-		}
-	
 		$filename = Yii::$app->request->post('filename');
-		$ext = Yii::$app->request->post('ext');
+		$extension = Yii::$app->request->post('ext');		
+		$message = 'Не удалось загрузить файл';
 		
-		return $Folder->upload($filename, $ext, isset($options['force']));
+		try {
+		    $Uploader = new Uploader($Folder);
+		    if (($SavedFile = $Uploader->upload('file', $filename, $extension, $forceToRewrite))!==false) {
+		        return [
+		            'status' => 'success',
+		            'file' => $SavedFile->item,
+		            'url'=> $SavedFile->url,
+		            'path'=>$SavedFile->aliasPath
+		        ];
+		    }
+		}
+		catch (\Exception $e) {
+		    $message = $e->getMessage();
+		}
+		
+		return [
+		    'status' => 'error',
+		    'message' => $message
+		];
 	}
 	
-	private function _progressAction($options)
+	public function actionProgress($options)
 	{
-		$tmp = isset($options['tmp']) ? $options['tmp'] : '';
+		$tmp = $options['tmp'] ?? '';
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		return (new Uploader)->getProgress($tmp);
+		return Uploader::getProgress($tmp);
 	}
 	
-	private function _imageAction($options)
+	/*private function _imageAction($options)
 	{
 		$path = isset($options['path']) ? $options['path'] : '';
 		$alias =  isset($options['alias']) ? $options['alias'] : '';
@@ -428,5 +415,5 @@ class ConnectorController extends BaseController
 		$File = new File(['aliasId' => $alias, 'path' => $path]);
 		
 		return $File->exists ? ArrayHelper::merge( $File->item(), ['url' => $File->url]) : ['status' => 'missed'];
-	}
+	}*/
 }
