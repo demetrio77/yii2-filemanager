@@ -17,6 +17,8 @@ use yii\helpers\FileHelper;
 use demetrio77\manager\helpers\Listing;
 use demetrio77\manager\helpers\Configuration;
 use demetrio77\manager\helpers\FileExistsException;
+use demetrio77\manager\helpers\UploaderProgress;
+use demetrio77\manager\helpers\FilesInFolderException;
 
 class ConnectorController extends BaseController
 {
@@ -71,7 +73,7 @@ class ConnectorController extends BaseController
 		} catch (\Exception $e) {
 		    return [
 		        'found' => false,
-		        'message' => 'Произошла ошибка'
+		        'message' => $e->getMessage()
 		    ];
 		}
 	}
@@ -118,11 +120,11 @@ class ConnectorController extends BaseController
 			
 			if ($model->load(Yii::$app->request->post()) && $model->validate()) {
 				try {
-				    if ($File->rename($model->newFilename)) {
+				    if (($newFileName = FileSystem::rename($File, $model->newFilename))!==false) {
 				        return [
 							'status' => 'success',
         					'oldName' => $oldName,
-        					'filename' => $File->basename
+				            'filename' => $newFileName
         				];
 				    }
 				    $model->addError('newFilename', 'Не удалось переименовать файл или папку');
@@ -155,7 +157,7 @@ class ConnectorController extends BaseController
 	
 			if ($model->load(Yii::$app->request->post()) && $model->validate()){
 			    try {
-			        if ($ParentFolder->mkdir($model->name)) {
+			        if (FileSystem::mkdir($ParentFolder, $model->name)) {
         				return [
         					'status' => 'success',
         					'name' => $model->name
@@ -182,7 +184,8 @@ class ConnectorController extends BaseController
 	{
 		$Path = $options['path'] ?? '';
 		$aliasId =  $options['alias'] ?? '';
-
+        $forceDelete = Yii::$app->request->post('forceDelete', false);
+		
 		$File = new File($aliasId, $Path);
 		
 		if (Yii::$app->request->isPost && Yii::$app->request->post('yes')) {
@@ -190,23 +193,29 @@ class ConnectorController extends BaseController
 			
 			$message = 'Файл невозможно удалить';
 			try {
-			    if ($File->delete()) {
+			    if (FileSystem::delete($File, $forceDelete)) {
 					return [
     					'status' => 'success'
     				];
 			    }
+			}
+			catch (FilesInFolderException $e){
+			    return [
+			        'status' => 'validate',
+			        'html' => $this->renderAjax('delete', ['file' => $File, 'type' =>'folderNotEmpty'])
+			    ];
 			}
 			catch (\Exception $e){
 			    $message = $e->getMessage(); 
 			}
 			
 			return [
-			   'status' => 'validate',
-			   'html' => $message
+			    'status' => 'validate',
+			    'html' => $this->renderAjax('delete', ['file' => $File, 'message' => $message, 'type' =>'message'])
 			];
 		}
 		else {
-			return $this->renderAjax('delete', [ 'file' => $File ]);
+			return $this->renderAjax('delete', [ 'file' => $File]);
 		}
 	}
 	
@@ -258,7 +267,7 @@ class ConnectorController extends BaseController
 		$message = 'Операция закончилась ошибкой';
 		
 		try {
-		    if ($FileTarget->paste( $FileObject, $newName, $type=='cut')) {
+		    if (FileSystem::paste($FileTarget, $FileObject, $newName, $type=='cut')) {
 		        $result = ['status' => 'success'];
 		        if ($newName) {
 		            $result['newName'] = $newName;
@@ -271,8 +280,8 @@ class ConnectorController extends BaseController
 		        'status' => 'validate',
 		        'html' => $this->renderAjax('newname', [
 		            'oldName' => $e->getToChangeName(), 
-		            'File' => $FileObject ]
-		         )
+		            'File' => $FileObject 
+		        ])
 		    ];
 		}
 		catch (\Exception $e) {
@@ -308,6 +317,9 @@ class ConnectorController extends BaseController
 		try {
 		    $Uploader = new Uploader($Folder);
 		    if (($SavedFile = $Uploader->byLink($url, $filename, $extension, $tmp, $forceToRewrite))!==false) {
+		        if ($SavedFile->canThumb()){
+		            $SavedFile->thumb->create();
+		        }
 		        return [
 		            'status' => 'success',
 		            'file' => $SavedFile->item,
@@ -343,6 +355,9 @@ class ConnectorController extends BaseController
 		try {
 		    $Uploader = new Uploader($Folder);
 		    if (($SavedFile = $Uploader->upload('file', $filename, $extension, $forceToRewrite))!==false) {
+		        if ($SavedFile->canThumb()){
+		            $SavedFile->thumb->create();
+		        }
 		        return [
 		            'status' => 'success',
 		            'file' => $SavedFile->item,
@@ -365,7 +380,12 @@ class ConnectorController extends BaseController
 	{
 		$tmp = $options['tmp'] ?? '';
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		return Uploader::getProgress($tmp);
+		
+		if ($tmp) {
+		    return (new UploaderProgress($tmp))->read(true);
+		}
+		
+		return ;
 	}
 	
 	/*private function _imageAction($options)

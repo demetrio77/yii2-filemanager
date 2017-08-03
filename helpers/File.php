@@ -5,6 +5,13 @@ namespace demetrio77\manager\helpers;
 use yii\helpers\FileHelper;
 use yii\base\Object;
 use yii\base\UnknownPropertyException;
+use demetrio77\manager\Module;
+use demetrio77\manager\events\DirectoryCreatedEvent;
+use demetrio77\manager\events\FileRenamedEvent;
+use demetrio77\manager\events\FileRemovedEvent;
+use demetrio77\manager\events\FileCopiedEvent;
+use demetrio77\manager\events\FileUploadedEvent;
+use yii\base\Component;
 
 /**
  * 
@@ -21,11 +28,76 @@ use yii\base\UnknownPropertyException;
  * @property bool $exists
  * @property array $item
  * @property \demetrio77\manager\helpers\File $folder
+ * @property \demetrio77\manager\helpers\Thumb $thumb
  * 
  * 
  */
-class File extends BaseFile
+class File extends Component
 {
+    protected $aliasId;
+    protected $aliasPath;
+    protected $_alias;
+    protected $_path;
+    protected $_url;
+    protected $_pathinfo;
+    
+    const EVENT_RENAMED = 'AliasFileRenamed';
+    const EVENT_COPIED = 'AliasFileCopied';
+    const EVENT_REMOVED = 'AliasFileRemoved';
+    const EVENT_UPLOADED = 'AliasFileUploaded';
+    const EVENT_MKDIR = 'AliasFileMkdir';
+    
+    public function __construct($aliasId, $aliasPath)
+    {
+        $this->aliasId = $aliasId;
+        $this->aliasPath = trim($aliasPath, "/");
+    }
+        
+    public static function findByUrl($url)
+    {
+        $Alias = Alias::findByUrl($url);
+        if (!$Alias) return null;
+        
+        $explodUrl = explode($Alias->fullurl, $url);
+        if (count($explodUrl)<2) return null;
+        
+        $aliasPath = $explodUrl[1];
+        return new self($Alias->id, $aliasPath);
+    }
+    
+    private static function extractFileFromPath($path)
+    {
+        $Alias = Alias::findByPath($path);
+        if (!$Alias) return null;
+        
+        $explodPath = explode($Alias->fullpath, $path);
+        if (count($explodPath)<2) return null;
+        
+        $aliasPath = $explodPath[1];
+        return ['aliasId' => $Alias->id, 'aliasPath' => $aliasPath];
+    }
+    
+    public static function findByPath($path)
+    {
+        $Extract = self::extractFileFromPath($path);
+        if ($Extract) {
+            return new self($Extract['aliasId'], $Extract['aliasPath']);
+        }
+    }
+    
+    public function refresh($newPath)
+    {
+        $Extract = self::extractFileFromPath($path);
+        if ($Extract) {
+            $this->aliasId = $Extract['aliasId'];
+            $this->aliasPath = trim($Extract['aliasPath'], "/");
+            $this->_alias = null;
+            $this->_path = null;
+            $this->_url = null;
+            $this->_pathinfo = null;
+        }
+    }
+    
     public function getItem()
     {
         if ($this->exists) {
@@ -47,7 +119,7 @@ class File extends BaseFile
                     'size' => $this->size,
                     'ext' =>  mb_strtolower($this->extension),
                     'time' => $this->time,
-                    //'tmb' => $this->thumb->exists,
+                    'tmb' => $this->canThumb() ? $this->thumb->exists : false,
                     'isI' => $this->isImage()
                 ];
             }
@@ -55,176 +127,182 @@ class File extends BaseFile
         return null;
     }
     
-    /***
-     * ОПЕРАЦИИ НАД ФАЙЛАМИ В ФАЙЛОВОЙ СИСТЕМЕ
-     */
+    public function getAlias()
+    {
+        if (!$this->_alias) {
+            $this->_alias = Alias::findById($this->aliasId);
+        }
+        return $this->_alias;
+    }
     
-    public function createDirectory()
+    public function getThumb()
+    {
+        if ($this->canThumb()){
+            return new Thumb($this);
+        }
+        return null;
+    }
+    
+    public function hasThumb()
+    {
+        return (boolean)($this->thumb && $this->thumb->exists);
+    }
+    
+    public function canThumb()
+    {
+        $module = Module::getInstance();
+        return $module->thumbs && ($this->isFolder() || $this->isImage());
+    }
+    
+    public function getUrl()
+    {
+        if (!$this->_url) {
+            $this->_url = FileHelper::normalizePath($this->alias->fullurl . DIRECTORY_SEPARATOR . $this->aliasPath);
+        }
+        return $this->_url;
+    }
+    
+    public function getPath()
+    {
+        if (!$this->_path) {
+            $this->_path =  FileHelper::normalizePath($this->alias->fullpath . DIRECTORY_SEPARATOR . $this->aliasPath);
+        }
+        return $this->_path;
+    }
+    
+    public function getAliasPath()
+    {
+        return $this->aliasPath;
+    }
+    
+    public function getFilename()
+    {
+        if (!$this->_pathinfo) {
+            $this->_pathinfo = pathinfo($this->path);
+        }
+        return $this->_pathinfo['filename'];
+    }
+    
+    public function getBasename()
+    {
+        if (!$this->_pathinfo) {
+            $this->_pathinfo = pathinfo($this->path);
+        }
+        return $this->_pathinfo['basename'];
+    }
+    
+    public function getExtension()
+    {
+        if (!$this->_pathinfo) {
+            $this->_pathinfo = pathinfo($this->path);
+        }
+        return $this->_pathinfo['extension'];
+    }
+    
+    public function getDir()
+    {
+        if (!$this->_pathinfo) {
+            $this->_pathinfo = pathinfo($this->path);
+        }
+        return $this->_pathinfo['dirname'];
+    }
+    
+    public function getFolder()
+    {
+        return self::findByPath($this->dir);
+    }
+    
+    public function getSize()
+    {
+        return filesize($this->path);
+    }
+    
+    public function getTime()
+    {
+        return filemtime($this->path);
+    }
+    
+    public function getExists()
+    {
+        return file_exists($this->path);
+    }
+    
+    public function isFolder()
+    {
+        return $this->exists && is_dir($this->path);
+    }
+    
+    public function isImage()
+    {
+        return in_array($this->extension, ['png','jpg','jpeg','gif', 'bmp', 'tiff']);
+    }
+    
+    public function getHasFiles()
     {
         if (!$this->exists) {
-            FileHelper::createDirectory($this->path);
+            return false;
         }
-    }
-    
-    public function checkParentFolderToFileExists($basename)
-    {
-        $fullName = FileHelper::normalizePath($this->dir . DIRECTORY_SEPARATOR . $basename);
-        return file_exists($fullName);
-    }
-    
-    public function checkFolderToFileExists($basename)
-    {
-        $fullName = FileHelper::normalizePath($this->path . DIRECTORY_SEPARATOR . $basename);
-        return file_exists($fullName);
-    }    
-    
-    public function rename($newName)
-    {
-        $newFileName = $newName . ($this->extension? '.' . $this->extension : '');
-        
-        if ($this->checkFolderToFileExists($newFileName)) {
-            throw new \Exception('Файл или директория с таким именем уже существуют');
-        }
-        
-        $newFullName = FileHelper::normalizePath($this->dir . DIRECTORY_SEPARATOR . $newFileName);
-        
-        if (rename($this->path, $newFullName)) {
-            $this->aliasPath = $this->alias->extractPathFromFullpath($newFullName);
-            $this->refresh();
-            return true;
-        }
-        
-        throw new \Exception('Не удалось переименовать файл или папку');
-    }
-    
-    public function mkdir($dirName)
-    {
-        if (!$this->exists) {
-            throw new \Exception('Родительская директория не существуют');
-        }
-        
-        $newFullName = FileHelper::normalizePath($this->path . DIRECTORY_SEPARATOR . $dirName);
-        
-        if (file_exists($newFullName)) {
-            throw new \Exception('Директория с таким именем уже существуют');
-        }
-        
-        return FileHelper::createDirectory($newFullName);
-    }
-    
-    public function paste(File $ObjectFile, $newName = false, $isCut = false)
-    {
-        if (!$this->exists || !$this->isFolder()) {
-            throw new \Exception('Не найдено, куда копировать');
-        }
-        
-        if (!$ObjectFile->exists) {
-            throw new \Exception('Не найдено, что копировать');
-        }
-        
-        if (mb_strpos($this->path, $ObjectFile->_path)!==false) {
-            throw new \Exception('Невозможно скопировать папку в саму себя');
-        }
-        
-        $pasteName = $newName ? $newName . ($ObjectFile->extension ? '.' .$ObjectFile->extension : '') : $ObjectFile->basename;
-        
-        if ($this->checkFolderToFileExists($pasteName)) {
-            throw new FileExistsException($pasteName, 'В директории уже содержится объект с данным именем');
-        }
-        
-        $fullPastePath = FileHelper::normalizePath($this->path . DIRECTORY_SEPARATOR . $pasteName);
-        
-        if ($ObjectFile->isFolder()) {
-            exec("cp -R ".$ObjectFile->path." ".$fullPastePath);
-        }
-        else {
-            copy($ObjectFile->path, $fullPastePath );
-        }
-        
-        if ($isCut){
-            $ObjectFile->delete(true);
-        }
-        
-        return true;
-        
-        /*
-        $objectName = $ObjectFile->name;
-        $ext = $ObjectFile->isFolder ? false : $ObjectFile->extension;
-        if ($ext) $ext = '.'.$ext;
-        
-        if (file_exists($this->absolute . DIRECTORY_SEPARATOR . $objectName . ($ext ? $ext : ''))) {
-            
-            if ($newNameIfExists && !file_exists( $this->absolute . DIRECTORY_SEPARATOR . $newNameIfExists . ($ext ? $ext : '') )) {
-                //copy newNameIfExists return ok
-                if ($ObjectFile->isFolder) {
-                    //FileHelper::copyDirectory($ObjectFile->absolute, $this->absolute . DIRECTORY_SEPARATOR . $newNameIfExists);
-                    exec("cp -R ".$ObjectFile->absolute." ".$this->absolute.DIRECTORY_SEPARATOR . $newNameIfExists);
-                }
-                else {
-                    copy($ObjectFile->absolute, $this->absolute . DIRECTORY_SEPARATOR . $newNameIfExists. ($ext ? $ext : '') );
-                }
-            }
-            else {
-                return [
-                    'status' => 'validate',
-                    'toChange' => $newNameIfExists ? $newNameIfExists : $objectName
-                ];
-            }
-        }
-        else {
-            //copy return ok
-            if ($ObjectFile->isFolder) {
-                //FileHelper::copyDirectory($ObjectFile->absolute, $this->absolute . DIRECTORY_SEPARATOR . $objectName);
-                exec("cp -R ".$ObjectFile->absolute." ".$this->absolute.DIRECTORY_SEPARATOR . $objectName);
-            }
-            else {
-                copy($ObjectFile->absolute, $this->absolute . DIRECTORY_SEPARATOR . $objectName. ($ext ? $ext : '') );
-            }
-        }
-        
-        if ($ObjectFile->thumb->exists) {
-            $ObjectFile->thumb->copyTo($this, $newNameIfExists. ($newNameIfExists && $ext ? $ext : ''));
-        }
-        
-        $ObjectFile->image->copyTo($this, $newNameIfExists. ($newNameIfExists && $ext ? $ext : ''));
-        
-        if ($isMove) {
-            $ObjectFile->delete();
-        }
-        
-        $result = ['status' => 'success'];
-        if ($newNameIfExists) {
-            $result['newName'] = $newNameIfExists. ($ext ? $ext : '');
-        }
-        return $result;*/        
-    }
-    
-    public function delete($forceDelete=false)
-    {
-        if (!$this->exists) {
-            throw new \Exception('Директория или файл не существуют');
-        }
-        
-        if ($this->isFolder() && $this->hasFiles){
-            if ($forceDelete) {
-                exec("rm -rf ".$this->path);
-                return true;
-            } else {
-                throw new \Exception('Директория не пуста');
-            }
-        }
-        
         if ($this->isFolder()) {
-            if (rmdir($this->path)) {
-                return true;
-            }
+            return count(scandir($this->path))>2;
         }
-        else {
-            if (unlink($this->path)) {
-                return true;
-            }
+        return false;
+    }
+    
+    //TODO убрать deprecated!!!
+    public static function formatSize($bytes) {
+        if ($bytes < 1024) {
+            return "$bytes байт";
+        }
+        if ($bytes < 1024*1024) {
+            return  round($bytes/1024).'&nbsp;Кб';
+        }
+        if ($bytes < 1024*1024*1024) {
+            return  round($bytes/(1024*1024),1).'&nbsp;Мб';
         }
         
-        return false;
+        return  round($bytes/(1024*1024*1024),1).'&nbsp;Гб';
+    }
+    
+    public function afterDirectoryCreate($parentFolder, $dirName)
+    {
+        $this->trigger(self::EVENT_MKDIR, new DirectoryCreatedEvent([
+            'folder' => $this,
+            'parentFolder' => $parentFolder,
+            'dirName' => $dirName
+        ]));
+    }
+    
+    public function afterFileRenamed($newName, $oldFile)
+    {
+        $this->trigger(self::EVENT_RENAMED, new FileRenamedEvent([
+            'file' => $this,
+            'newName' => $newName,
+            'oldFile' => $oldFile
+        ]));
+    }
+    
+    public function afterFileRemoved()
+    {
+        $this->trigger(self::EVENT_REMOVED, new FileRemovedEvent([
+            'file' => $this
+        ]));
+    }
+    
+    public function afterFileCopied($destination, $objectFile, $newName, $isCut)
+    {
+        $this->trigger(self::EVENT_COPIED, new FileCopiedEvent([
+            'file' => $this,
+            'destination' =>$destination,
+            'objectFile' => $objectFile,
+            'newName' => $newName,
+            'isCut' => $isCut
+        ]));
+    }
+    
+    public function afterFileUploaded()
+    {
+        $this->trigger(self::EVENT_UPLOADED, new FileUploadedEvent([
+            'file' => $this
+        ]));
     }
 }

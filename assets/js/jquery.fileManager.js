@@ -2200,6 +2200,14 @@
                 		});
                 		
                 		if (view.current>0 && alias.paste) {
+                			$('.fm-files', $this).droppable({
+	                			drop: function(event, ui){
+	                				var target = view.current;
+	                				var object = ui.draggable.data('id');
+	                				self.paste(target, object, 'cut');
+	                			}
+	                		});
+                			
                 			$('.ft-item-folder').droppable({
                     			hoverClass: "drop-hover",
                     			drop: function(event, ui){
@@ -2208,14 +2216,6 @@
                     				self.paste(target, object, 'cut');
                     			}
                     		});
-                			
-                			$('.fm-files', $this).droppable({
-	                			drop: function(event, ui){
-	                				var target = view.current;
-	                				var object = ui.draggable.data('id');
-	                				self.paste(target, object, 'cut');
-	                			}
-	                		});
                 		}
                 	};
                 	

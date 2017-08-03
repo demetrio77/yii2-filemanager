@@ -4,6 +4,7 @@ namespace demetrio77\manager\helpers;
 
 use yii\base\Object;
 use yii\helpers\ArrayHelper;
+use yii\helpers\FileHelper;
 
 /**
  * 
@@ -80,7 +81,7 @@ class Listing extends Object
         $File = new File($Alias->id, $Path);
             
         if ($Path && $type=='folder' && !$File->exists) {
-            $File->createDirectory();
+            FileHelper::createDirectory($File->path);
         }
             
         $explodePath = ArrayHelper::merge([''], explode(DIRECTORY_SEPARATOR, $Path));

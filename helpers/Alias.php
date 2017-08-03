@@ -58,6 +58,11 @@ class Alias extends Object
 	    return FileHelper::normalizePath(Yii::getAlias($this->url));
 	}
 	
+	public function getThumb()
+	{
+	    return Yii::getAlias($this->thumbs['url']);
+	}
+	
 	public function getItem()
 	{
 	    return [
@@ -65,8 +70,7 @@ class Alias extends Object
 	        'isFolder' => true,
 	        'alias' => $this->id,
 	        'href' =>  $this->fullurl,
-	        'thumb' => '',
-	        
+	        'thumb' => $this->thumb,	        
 	        'mkdir' => true,
 	        'copy' => true,
 	        'cut' => true,

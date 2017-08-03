@@ -5,7 +5,7 @@ namespace demetrio77\manager\helpers;
 use yii\base\Object;
 use yii\helpers\FileHelper;
 
-class FileSystem extends Object
+class FileSystem1 extends Object
 {
 	public static function dir($fullpath)
 	{
