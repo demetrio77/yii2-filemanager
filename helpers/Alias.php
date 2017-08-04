@@ -55,7 +55,7 @@ class Alias extends Object
 	
 	public function getFullUrl()
 	{
-	    return FileHelper::normalizePath(Yii::getAlias($this->url));
+	    return Yii::getAlias($this->url);
 	}
 	
 	public function getThumb()

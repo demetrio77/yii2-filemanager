@@ -50,7 +50,7 @@ class Thumb extends Object
         if (!file_exists($this->dir)){
             FileHelper::createDirectory($this->dir);
         }
-        return (new Image($this->file->path))->cropThumb($this->path, $this->width, $this->height);
+        return (new Image($this->file->path))->cropThumb($this->width, $this->height, $this->path);
     }
     
     public function getExtension()

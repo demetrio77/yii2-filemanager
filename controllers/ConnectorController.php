@@ -388,26 +388,97 @@ class ConnectorController extends BaseController
 		return ;
 	}
 	
-	/*private function _imageAction($options)
+	public function actionImage($options)
 	{
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
-		$cnt = isset($options['cnt'])?$options['cnt']:0;
-		Yii::$app->response->format = Response::FORMAT_JSON;
-		$File = new File(['aliasId' => $alias, 'path' => $path]);
+	    Yii::$app->response->format = Response::FORMAT_JSON;
+	    
+	    if (!isset($this->module->image)) {
+	        return [
+	            'status' => 'error',
+	            'message' => 'Не заданы настроки обработки изображений в модуле'
+	        ];
+		}
+	    
+	    $Path = $options['path'] ?? '';
+		$aliasId =  $options['alias'] ?? '';
+		$cnt = $options['cnt'] ?? 0;
+		$cnt++;
+		$action = \Yii::$app->request->post('action', '');
+				
+		$File = new File($aliasId, $Path);
 		
-		if (!$File->isImage) {
-			return ['status' => 'error', 'message' => 'Это не рисунок'];
+		if (!$File->isImage()) {
+			return [
+			    'status' => 'error', 
+			    'message' => 'Это не рисунок'
+			];
 		}
 		
-		if (!$File->alias->can) {
-			return ['status' => 'error', 'message' => 'Не хватает прав'];
+		/*if (!$File->alias->can) {
+		 return ['status' => 'error', 'message' => 'Не хватает прав'];
+		 }*/
+		
+		$tempDir = FileHelper::normalizePath(\Yii::getAlias($this->module->image['tmpViewFolder']));
+		$tempUrl = \Yii::getAlias($this->module->image['tmpViewUrl']);
+		
+		$image = new Image($File->path, $cnt, $tempDir, $tempUrl);
+		
+		switch ($action) {
+		    case 'resize':
+		        $width = \Yii::$app->request->post('width', 0);
+		        $height = \Yii::$app->request->post('height', 0);
+		        if (!$width || !$height) {
+		            return ['status' => 'error', 'message' => 'Не задан размер'];
+		        }
+		        $result = $image->resize($width,$height);
+		    break;
+		    
+		    case 'crop':
+		        $width = \Yii::$app->request->post('width', 0);
+		        $height = \Yii::$app->request->post('height', 0);
+		        $x = \Yii::$app->request->post('x', 0);
+		        $y = \Yii::$app->request->post('y', 0);
+		        if (!$width || !$height) {
+		            return ['status' => 'error', 'message' => 'Не заданы параметры'];
+		        }
+		        $result = $image->crop($width,$height,$x,$y);
+		    break;
+		    
+		    case 'turn':
+		        if (!isset($options['turn'])) {
+		            return ['status' => 'error', 'message' => 'Не заданы параметры'];
+		        }
+		        return $image->turn($options['turn'],$cnt);
+		    case 'watermark':
+		        $saveOwn = false;
+		        if (!isset($options['watermark'])) {
+		            $options['watermark'] = 3;
+		        }
+		        if (isset($options['own'])){
+		            $saveOwn = true;
+		        }
+		        return $image->waterMark($options['watermark'], $saveOwn, $cnt);
 		}
 		
-		return (new Image(['File'=>$File]))->process( Yii::$app->request->post(), $cnt);
+		if (isset($result)){
+		    return $result ? [
+		        'status' => 'success',
+		        'cnt' => $cnt,
+		        'url' => $image->getTempUrl()
+		    ]: [
+		        'status' => 'error',
+		        'message' => 'Не удалось выполнить операцию'
+		    ];
+		}
+		else {
+		    return [
+		        'status' => 'error', 
+		        'message' => 'Не задано действие'
+		    ];
+		}
 	}
 	
-	private function _saveImageAction($options)
+	/*private function _saveImageAction($options)
 	{
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		
