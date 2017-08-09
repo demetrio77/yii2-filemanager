@@ -3,6 +3,7 @@
 namespace demetrio77\manager\controllers;
 
 use Yii;
+use yii\filters\AccessControl;
 
 class CkeditorController extends BaseController
 {

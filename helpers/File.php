@@ -12,6 +12,8 @@ use demetrio77\manager\events\FileRemovedEvent;
 use demetrio77\manager\events\FileCopiedEvent;
 use demetrio77\manager\events\FileUploadedEvent;
 use yii\base\Component;
+use yii\base\Event;
+use demetrio77\manager\events\ImageChangedEvent;
 
 /**
  * 
@@ -29,6 +31,7 @@ use yii\base\Component;
  * @property array $item
  * @property \demetrio77\manager\helpers\File $folder
  * @property \demetrio77\manager\helpers\Thumb $thumb
+ * @property \demetrio77\manager\helpers\Image $image
  * 
  * 
  */
@@ -46,6 +49,7 @@ class File extends Component
     const EVENT_REMOVED = 'AliasFileRemoved';
     const EVENT_UPLOADED = 'AliasFileUploaded';
     const EVENT_MKDIR = 'AliasFileMkdir';
+    const EVENT_IMAGE_CHANGED = 'AliasImageChanged';
     
     public function __construct($aliasId, $aliasPath)
     {
@@ -87,7 +91,7 @@ class File extends Component
     
     public function refresh($newPath)
     {
-        $Extract = self::extractFileFromPath($path);
+        $Extract = self::extractFileFromPath($newPath);
         if ($Extract) {
             $this->aliasId = $Extract['aliasId'];
             $this->aliasPath = trim($Extract['aliasPath'], "/");
@@ -152,6 +156,29 @@ class File extends Component
     {
         $module = Module::getInstance();
         return $module->thumbs && ($this->isFolder() || $this->isImage());
+    }
+    
+    public function canImage()
+    {
+        return $this->isImage() && isset($this->alias->image);
+    }
+    
+    public function getCopies()
+    {
+        $copies = [];
+        if ($this->isImage() && $this->canImage()){
+            if (isset($this->alias->image['copies'])) foreach ($this->alias->image['copies'] as $copyAlias => $copy){
+                $copies[$copyAlias] = new ImageCopy($this, $copyAlias);
+            }
+        }
+        return $copies;
+    }
+    
+    public function getImage()
+    {
+        if ($this->isImage()){
+            return new Image($this);
+        }
     }
     
     public function getUrl()
@@ -304,5 +331,14 @@ class File extends Component
         $this->trigger(self::EVENT_UPLOADED, new FileUploadedEvent([
             'file' => $this
         ]));
+    }
+    
+    public function afterImageChanged()
+    {
+        if ($this->isImage()) {
+            $this->trigger(self::EVENT_IMAGE_CHANGED, new ImageChangedEvent([
+                'file' => $this
+            ]));
+        }
     }
 }

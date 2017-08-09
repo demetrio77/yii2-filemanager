@@ -23,12 +23,12 @@ use yii\helpers\FileHelper;
 class Thumb extends Object
 {
     public $file;
-    private $_path;
-    private $_pathinfo;
-    private $optionsFolder;
-    private $optionsUrl;
-    private $width;
-    private $height;
+    protected $_path;
+    protected $_pathinfo;
+    protected $optionsFolder;
+    protected $optionsUrl;
+    protected $width;
+    protected $height;
     
     public function __construct($File)
     {
@@ -50,7 +50,7 @@ class Thumb extends Object
         if (!file_exists($this->dir)){
             FileHelper::createDirectory($this->dir);
         }
-        return (new Image($this->file->path))->cropThumb($this->width, $this->height, $this->path);
+        return (new Image($this->file))->cropThumb($this->width, $this->height, $this->path);
     }
     
     public function getExtension()
@@ -117,68 +117,5 @@ class Thumb extends Object
             return count(scandir($this->path))>2;
         }
         return false;
-    }
-    
-    public static function onFileUploaded($event)
-    {
-        if ($event->file->canThumb()){
-            try {
-                $event->file->thumb->create();
-            }
-            catch (\Exception $e){
-                //echo $e->getMessage();
-            };
-        }
-    }
-    
-    public static function onFileRemoved($event)
-    {
-        if ($event->file->canThumb() && $event->file->hasThumb()){
-            try {
-                FileSystem::delete($event->file->thumb, true);
-            }
-            catch (\Exception $e){
-                //echo $e->getMessage();
-            };
-        }
-    }
-    
-    
-    public static function onFileCopied($event)
-    {
-        if ($event->objectFile->canThumb() && $event->objectFile->hasThumb()){
-            try {
-                if (!file_exists($event->destination->thumb->dir)){
-                    FileHelper::createDirectory($event->destination->thumb->dir);
-                }
-                FileSystem::paste($event->destination->thumb, $event->objectFile->thumb, $event->newName, $event->isCut);
-            }
-            catch (\Exception $e){
-                //echo $e->getMessage();
-            };
-        }
-    }
-    
-    public static function onFileRenamed($event)
-    {
-        if ($event->oldFile->canThumb() && $event->oldFile->hasThumb()){
-            try {
-                FileSystem::rename($event->oldFile->thumb, $event->newName);
-            }
-            catch (\Exception $e){
-                //echo $e->getMessage();
-            };
-        }
-    }
-    public static function onDirectoryCreated($event)
-    {
-        if ($event->folder->canThumb()){
-            try {
-                FileSystem::mkdir($event->parentFolder->thumb, $event->dirName);
-            }
-            catch (\Exception $e){
-                //echo $e->getMessage();
-            };
-        }
     }
 }

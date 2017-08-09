@@ -29,6 +29,7 @@ class Alias extends Object
 	public $slugify = true;
 	public $rewriteIfExists = false;
 	public $rights = [];
+	public $copies=[];
 
 	public function init()
 	{

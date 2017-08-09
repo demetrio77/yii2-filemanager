@@ -5,42 +5,29 @@ namespace demetrio77\manager\helpers;
 use demetrio77\manager\Module;
 use yii\helpers\FileHelper;
 
-class Image implements ImageInterface
+/**
+ * 
+ * @author dk
+ * @property \demetrio77\manager\helpers\File $file
+ */
+class Image
 {
     public $instance;
     private $cnt;
-    private $filename;
+    private $file;
     private $tempFile;
     private $tempUrl;
     private $tempFolderDir;
     private $tempFolderUrl;
     
-    public function __construct($filename, $cnt=null, $tempFolderDir=null, $tempFolderUrl=null)
+    public function __construct($file, $cnt=null, $tempFolderDir=null, $tempFolderUrl=null)
     {
         $this->cnt = $cnt;
-        $this->filename = $filename;
-        $this->instance = self::hasImagick() ? new ImageIm($filename) : new ImageGd($filename);
-        
+        $this->file = $file;
         $this->tempFolderDir = $tempFolderDir;
         $this->tempFolderUrl = $tempFolderUrl;
         
-        if ($this->cnt!==null){
-            $this->setTempData();
-        }
-    }
-    
-    private function setTempData()
-    {
-        $md5 = md5($this->filename);
-        $fileDir = $this->tempFolderDir . DIRECTORY_SEPARATOR . $md5;
-        $fileDirUrl = $this->tempFolderUrl . DIRECTORY_SEPARATOR . $md5;
-            
-        if (!file_exists($dir)) {
-            FileHelper::createDirectory($fileDir);
-        }
-        
-        $this->tempFile = $fileDir. DIRECTORY_SEPARATOR . $this->cnt;
-        $this->tempUrl = $fileDirUrl . DIRECTORY_SEPARATOR . $this->cnt;
+        $this->instance = self::hasImagick() ? new ImageIm($cnt ? $this->getTempFile($cnt-1) : $file->path) : new ImageGd($file);
     }
     
     /**
@@ -48,17 +35,44 @@ class Image implements ImageInterface
      */
     public static function hasImagick()
     {
-        return extension_loaded('imagick');        
+        return extension_loaded('imagick');
     }
     
-    public function getTempFile()
+    public function constraints()
     {
-        return $this->tempFile;        
+        $width = $this->file->alias->image['width'] ?? 0;
+        $height = $this->file->alias->image['height'] ?? 0;
+        $keepOrientation = $this->file->alias->image['keepOrientation'] ?? true;
+        
+        if ($width || $height){
+            $this->instance->constraints($width, $height);
+        }        
     }
     
-    public function getTempUrl()
+    public function getTempFile($cnt=null)
     {
-        return $this->tempUrl;
+        $md5 = md5($this->file->path);
+        $fileDir = $this->tempFolderDir . DIRECTORY_SEPARATOR . $md5;
+        
+        if (!file_exists($fileDir)) {
+            FileHelper::createDirectory($fileDir);
+        }
+        
+        if ($cnt===null){
+            $cnt = $this->cnt;
+        }
+        return $fileDir. DIRECTORY_SEPARATOR . $cnt;
+    }
+    
+    public function getTempUrl($cnt=null)
+    {
+        $md5 = md5($this->file->path);
+        $fileDirUrl = $this->tempFolderUrl . DIRECTORY_SEPARATOR . $md5;
+        
+        if ($cnt===null){
+            $cnt = $this->cnt;
+        }
+        return $fileDirUrl. DIRECTORY_SEPARATOR . $cnt;
     }
     
     public function cropThumb(int $width, int $height, string $saveAs=null)
@@ -68,8 +82,8 @@ class Image implements ImageInterface
     
     public function resize(int $width, int $height, string $saveAs = null)
     {
-        if (!$saveAs && $this->tempFile){
-            $saveAs = $this->tempFile;
+        if (!$saveAs && $this->cnt!==null){
+            $saveAs = $this->getTempFile();
         }
         
         return $this->instance->resize($width, $height, $saveAs);
@@ -77,10 +91,55 @@ class Image implements ImageInterface
     
     public function crop(int $width, int $height, int $x, int $y, string $saveAs = null)
     {
-        if (!$saveAs && $this->tempFile){
-            $saveAs = $this->tempFile;
+        if (!$saveAs && $this->cnt!==null){
+            $saveAs = $this->getTempFile();
         }
         
         return $this->instance->crop($width, $height, $x, $y, $saveAs);
+    }
+    
+    public function turn($turn, string $saveAs = null)
+    {
+        if (!$saveAs && $this->cnt!==null){
+            $saveAs = $this->getTempFile();
+        }
+        
+        return $this->instance->turn($turn, $saveAs);
+    }
+    
+    public function watermark($watermarkPosition, string $saveAs = null)
+    {
+        if (!$saveAs && $this->cnt!==null){
+            $saveAs = $this->getTempFile();
+        }
+        
+        $watermarkFile = $this->file->alias->image['watermark'] ?? false;
+        
+        if ($watermarkFile) {
+            $watermarkFile = \Yii::getAlias($watermarkFile);
+        } else {
+            return false;
+        }
+        
+        $padding = $this->file->alias->image['watermarkPadding'] ?? false;
+        
+        return $this->instance->waterMark($watermarkFile, $watermarkPosition, $position, $saveAs);
+    }
+    
+    public function saveAs($newName = full)
+    {
+        $filename = $this->getTempFile($this->cnt-1);
+        
+        if (file_exists($filename)){
+            $newPath = $newName ? $this->file->dir .DIRECTORY_SEPARATOR . $newName . ($this->file->extension ? '.'.$this->file->extension : '') : $this->file->path;
+            
+            if (copy($filename, $newPath)){
+                $file = $newName ? File::findByPath($newPath) : $this->file;
+                $file->afterImageChanged();
+                return $file;
+            }
+        }
+        
+        return false;
     }
 }

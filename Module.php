@@ -2,9 +2,12 @@
 
 namespace demetrio77\manager;
 
+use Yii;
 use yii\base\Event;
 use demetrio77\manager\helpers\File;
 use demetrio77\manager\helpers\Thumb;
+use demetrio77\manager\helpers\FileSystemEventHandlers;
+use yii\web\ForbiddenHttpException;
 
 class Module extends \yii\base\Module
 {
@@ -63,12 +66,10 @@ class Module extends \yii\base\Module
     
     public function addListeners()
     {
-        if ($this->thumbs) {
-            Event::on(File::class, File::EVENT_COPIED, [Thumb::class, 'onFileCopied']);
-            Event::on(File::class, File::EVENT_RENAMED, [Thumb::class, 'onFileRenamed']);
-            Event::on(File::class, File::EVENT_REMOVED, [Thumb::class, 'onFileRemoved']);
-            Event::on(File::class, File::EVENT_UPLOADED, [Thumb::class, 'onFileUploaded']);
-            Event::on(File::class, File::EVENT_MKDIR, [Thumb::class, 'onDirectoryCreated']);
-        }
+        Event::on(File::class, File::EVENT_COPIED, [FileSystemEventHandlers::class, 'onFileCopied']);
+        Event::on(File::class, File::EVENT_RENAMED, [FileSystemEventHandlers::class, 'onFileRenamed']);
+        Event::on(File::class, File::EVENT_REMOVED, [FileSystemEventHandlers::class, 'onFileRemoved']);
+        Event::on(File::class, File::EVENT_UPLOADED, [FileSystemEventHandlers::class, 'onFileUploaded']);
+        Event::on(File::class, File::EVENT_IMAGE_CHANGED, [FileSystemEventHandlers::class, 'onImageChanged']);
     }
 }

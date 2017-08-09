@@ -402,7 +402,6 @@ class ConnectorController extends BaseController
 	    $Path = $options['path'] ?? '';
 		$aliasId =  $options['alias'] ?? '';
 		$cnt = $options['cnt'] ?? 0;
-		$cnt++;
 		$action = \Yii::$app->request->post('action', '');
 				
 		$File = new File($aliasId, $Path);
@@ -421,7 +420,7 @@ class ConnectorController extends BaseController
 		$tempDir = FileHelper::normalizePath(\Yii::getAlias($this->module->image['tmpViewFolder']));
 		$tempUrl = \Yii::getAlias($this->module->image['tmpViewUrl']);
 		
-		$image = new Image($File->path, $cnt, $tempDir, $tempUrl);
+		$image = new Image($File, $cnt, $tempDir, $tempUrl);
 		
 		switch ($action) {
 		    case 'resize':
@@ -445,25 +444,23 @@ class ConnectorController extends BaseController
 		    break;
 		    
 		    case 'turn':
-		        if (!isset($options['turn'])) {
+		        $turn = \Yii::$app->request->post('turn', null);
+		        if ($turn===null) {
 		            return ['status' => 'error', 'message' => 'Не заданы параметры'];
 		        }
-		        return $image->turn($options['turn'],$cnt);
+		        $result = $image->turn($turn);
+		    break;
+		    
 		    case 'watermark':
-		        $saveOwn = false;
-		        if (!isset($options['watermark'])) {
-		            $options['watermark'] = 3;
-		        }
-		        if (isset($options['own'])){
-		            $saveOwn = true;
-		        }
-		        return $image->waterMark($options['watermark'], $saveOwn, $cnt);
+		        $watermarkPosition = \Yii::$app->request->post('watermark', 3);		        
+		        $result = $image->waterMark($watermarkPosition);
+		    break;
 		}
 		
 		if (isset($result)){
 		    return $result ? [
 		        'status' => 'success',
-		        'cnt' => $cnt,
+		        'cnt' => $cnt+1,
 		        'url' => $image->getTempUrl()
 		    ]: [
 		        'status' => 'error',
@@ -478,33 +475,57 @@ class ConnectorController extends BaseController
 		}
 	}
 	
-	/*private function _saveImageAction($options)
+	public function actionSaveImage($options)
 	{
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
+		$Path = $options['path'] ?? '';
+		$aliasId =  $options['alias'] ?? '';
 		
-		$File = new File(['aliasId' => $alias, 'path' => $path]);
+		$File = new File($aliasId, $Path);
 		
-		if (!$File->isImage) {
+		if (!$File->isImage()) {
 			return ['status' => 'error', 'message' => 'Это не рисунок'];
 		}
-		if (!$File->alias->can) {
-			return ['status' => 'error', 'message' => 'Не хватает прав'];
-		}
-		$res = (new Image(['File'=>$File]))->save( Yii::$app->request->post());
 		
-		return $res;
+		$cnt = Yii::$app->request->post('cnt', 0);
+		$newName = Yii::$app->request->post('newName', '');
+		
+		$tempDir = FileHelper::normalizePath(\Yii::getAlias($this->module->image['tmpViewFolder']));
+		$tempUrl = \Yii::getAlias($this->module->image['tmpViewUrl']);
+		
+		$image = new Image($File, $cnt, $tempDir, $tempUrl);
+		/*if (!$File->alias->can) {
+			return ['status' => 'error', 'message' => 'Не хватает прав'];
+		}*/
+		
+		if (($newFile = $image->saveAs($newName))!==false) {
+		    if (!$newName) {
+		        return [
+		            'status' => 'success',
+		            'file' =>  $newFile->item
+		        ];
+		    }
+		    else {
+		        return [
+		            'status' => 'newFile',
+		            'file' => $newFile->item
+		        ];
+		    }
+		}
+		
+		return ['status' => 'error', 'message' => 'Не удалось сохранить файл'];
 	}
 	
-	private function _itemAction($options)
+	public function actionItem($options)
 	{
-		$path = isset($options['path']) ? $options['path'] : '';
-		$alias =  isset($options['alias']) ? $options['alias'] : '';
-		Yii::$app->response->format = Response::FORMAT_JSON;
-		$File = new File(['aliasId' => $alias, 'path' => $path]);
+	    Yii::$app->response->format = Response::FORMAT_JSON;
+	    
+	    $Path = $options['path'] ?? '';
+	    $aliasId =  $options['alias'] ?? '';
+	    
+	    $File = new File($aliasId, $Path);
 		
-		return $File->exists ? ArrayHelper::merge( $File->item(), ['url' => $File->url]) : ['status' => 'missed'];
-	}*/
+		return $File->exists ? ArrayHelper::merge( $File->item, ['url' => $File->url]) : ['status' => 'missed'];
+	}
 }

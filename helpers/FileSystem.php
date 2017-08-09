@@ -93,72 +93,18 @@ class FileSystem
             copy($ObjectFile->path, $fullPastePath );
         }
         
-        if ($isCut){
-            self::delete($ObjectFile, true);
-        }
+        $oldObjectFile = clone $ObjectFile;
         
         if ($ObjectFile instanceof File){
-            $oldObjectFile = clone $ObjectFile;
             $ObjectFile->refresh($fullPastePath);
             $ObjectFile->afterFileCopied($Destination, $oldObjectFile, $newName, $isCut);
         }
+
+        if ($isCut){
+            self::delete($oldObjectFile, true);
+        }
         
         return true;
-        
-        
-    
-        /////закоменчено
-        /*
-        $objectName = $ObjectFile->name;
-        $ext = $ObjectFile->isFolder ? false : $ObjectFile->extension;
-        if ($ext) $ext = '.'.$ext;
-        
-        if (file_exists($this->absolute . DIRECTORY_SEPARATOR . $objectName . ($ext ? $ext : ''))) {
-            
-            if ($newNameIfExists && !file_exists( $this->absolute . DIRECTORY_SEPARATOR . $newNameIfExists . ($ext ? $ext : '') )) {
-                //copy newNameIfExists return ok
-                if ($ObjectFile->isFolder) {
-                    //FileHelper::copyDirectory($ObjectFile->absolute, $this->absolute . DIRECTORY_SEPARATOR . $newNameIfExists);
-                    exec("cp -R ".$ObjectFile->absolute." ".$this->absolute.DIRECTORY_SEPARATOR . $newNameIfExists);
-                }
-                else {
-                    copy($ObjectFile->absolute, $this->absolute . DIRECTORY_SEPARATOR . $newNameIfExists. ($ext ? $ext : '') );
-                }
-            }
-            else {
-                return [
-                    'status' => 'validate',
-                    'toChange' => $newNameIfExists ? $newNameIfExists : $objectName
-                ];
-            }
-        }
-        else {
-            //copy return ok
-            if ($ObjectFile->isFolder) {
-                //FileHelper::copyDirectory($ObjectFile->absolute, $this->absolute . DIRECTORY_SEPARATOR . $objectName);
-                exec("cp -R ".$ObjectFile->absolute." ".$this->absolute.DIRECTORY_SEPARATOR . $objectName);
-            }
-            else {
-                copy($ObjectFile->absolute, $this->absolute . DIRECTORY_SEPARATOR . $objectName. ($ext ? $ext : '') );
-            }
-        }
-        
-        if ($ObjectFile->thumb->exists) {
-            $ObjectFile->thumb->copyTo($this, $newNameIfExists. ($newNameIfExists && $ext ? $ext : ''));
-        }
-        
-        $ObjectFile->image->copyTo($this, $newNameIfExists. ($newNameIfExists && $ext ? $ext : ''));
-        
-        if ($isMove) {
-            $ObjectFile->delete();
-        }
-        
-        $result = ['status' => 'success'];
-        if ($newNameIfExists) {
-            $result['newName'] = $newNameIfExists. ($ext ? $ext : '');
-        }
-        return $result;*/ 
-        ///конец закоменчено
     }
     
     public static function delete($File, $forceDelete=false)
