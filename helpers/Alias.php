@@ -26,18 +26,16 @@ class Alias extends Object
 	public $label;
 	public $image = false;
 	public $thumbs = false;
-	public $slugify = true;
 	public $rewriteIfExists = false;
 	public $rights = [];
 	public $copies=[];
+	public $extensions = [];
+	public $mimetypes = [];
 
 	public function init()
 	{
 		$this->module = Module::getInstance();
 		$this->thumbs = $this->module->thumbs;
-		$this->rewriteIfExists = $this->module->rewriteIfExists;
-		$this->slugify = $this->module->slugify;
-		$this->rights = $this->module->rights;
 		
 		parent::init();
 		
@@ -72,13 +70,18 @@ class Alias extends Object
 	        'alias' => $this->id,
 	        'href' =>  $this->fullurl,
 	        'thumb' => $this->thumb,	        
-	        'mkdir' => true,
-	        'copy' => true,
-	        'cut' => true,
-	        'paste' => true,
-	        'rename' => true,
-	        'remove' => true
+	        'mkdir' => $this->can('mkdir'),
+	        'copy' => $this->can('copy'),
+	        'cut' => $this->can('cut'),
+	        'paste' => $this->can('paste'),
+	        'rename' => $this->can('rename'),
+	        'remove' => $this->can('remove')
 	    ];
+	}
+	
+	public function can($right)
+	{
+	    return Right::alias($right, $this);
 	}
 	
 	public function extractPathFromUrl($url)

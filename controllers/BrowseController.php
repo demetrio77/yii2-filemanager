@@ -3,6 +3,9 @@
 namespace demetrio77\manager\controllers;
 
 use Yii;
+use demetrio77\manager\helpers\Right;
+use demetrio77\manager\helpers\Alias;
+use yii\web\ForbiddenHttpException;
 
 class BrowseController extends BaseController
 {
@@ -10,6 +13,19 @@ class BrowseController extends BaseController
 	
 	public function actionIndex($alias, $options=[], /* deprecated */$path='', $fileName='', $returnPath=0, $id='', $destination='uploader')
 	{
+	    if ($alias){
+	        $Alias = Alias::findById($alias);
+	        if (!$Alias->can('view')) {
+	            throw new ForbiddenHttpException();
+	        }
+	    }
+	    else {
+	        if (!Right::module('view')){
+	            throw new ForbiddenHttpException();
+	        }
+	    }
+	    
+	    
 	    $path = isset($options['path'])?$options['path']:$path;
 	    $fileName= isset($options['fileName'])?$options['fileName']:$fileName;
 	    $returnPath = isset($options['returnPath'])?$options['returnPath']:$returnPath;

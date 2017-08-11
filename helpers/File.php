@@ -166,10 +166,8 @@ class File extends Component
     public function getCopies()
     {
         $copies = [];
-        if ($this->isImage() && $this->canImage()){
-            if (isset($this->alias->image['copies'])) foreach ($this->alias->image['copies'] as $copyAlias => $copy){
-                $copies[$copyAlias] = new ImageCopy($this, $copyAlias);
-            }
+        if (isset($this->alias->image['copies'])) foreach ($this->alias->image['copies'] as $copyAlias => $copy){
+            $copies[$copyAlias] = new ImageCopy($this, $copyAlias);
         }
         return $copies;
     }
@@ -184,7 +182,7 @@ class File extends Component
     public function getUrl()
     {
         if (!$this->_url) {
-            $this->_url = FileHelper::normalizePath($this->alias->fullurl . DIRECTORY_SEPARATOR . $this->aliasPath);
+            $this->_url = $this->alias->fullurl . DIRECTORY_SEPARATOR . $this->aliasPath;
         }
         return $this->_url;
     }
@@ -273,21 +271,6 @@ class File extends Component
             return count(scandir($this->path))>2;
         }
         return false;
-    }
-    
-    //TODO убрать deprecated!!!
-    public static function formatSize($bytes) {
-        if ($bytes < 1024) {
-            return "$bytes байт";
-        }
-        if ($bytes < 1024*1024) {
-            return  round($bytes/1024).'&nbsp;Кб';
-        }
-        if ($bytes < 1024*1024*1024) {
-            return  round($bytes/(1024*1024),1).'&nbsp;Мб';
-        }
-        
-        return  round($bytes/(1024*1024*1024),1).'&nbsp;Гб';
     }
     
     public function afterDirectoryCreate($parentFolder, $dirName)

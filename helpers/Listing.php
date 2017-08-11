@@ -5,6 +5,7 @@ namespace demetrio77\manager\helpers;
 use yii\base\Object;
 use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
+use yii\web\ForbiddenHttpException;
 
 /**
  * 
@@ -60,6 +61,17 @@ class Listing extends Object
             else {
                 $Alias = Alias::findByPath($tillObject);
                 $Path = $Alias ? $Alias->extractPathFromFullpath($tillObject) : false;
+            }
+        }
+        
+        if ($Alias) {
+            if (!$Alias->can('view')){
+                throw new ForbiddenHttpException('Нет доступа к указанной папке');
+            }
+        }
+        else {
+            if (!Right::module('view')) {
+                throw new ForbiddenHttpException('Нет доступа');
             }
         }
 

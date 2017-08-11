@@ -64,6 +64,7 @@ class ConnectorController extends BaseController
 	    $loadTo = Yii::$app->request->post('loadTo', false);
 	  
 	    $Listing = new Listing($init['type'], $init['value']);
+		
 		try {
 		    $items = $Listing->getTill($loadTo['value'], $loadTo['type'], isset($loadTo['withPath'])?$loadTo['withPath']:false);
 		    return [
@@ -102,6 +103,14 @@ class ConnectorController extends BaseController
 		    ];
 		}
 		
+		if (!$Folder->alias->can('view')){
+		    return [
+		        'found' => false,
+		        'json' => [],
+		        'message' => 'Нет доступа к папке'
+		    ];
+		}
+		
 		return Listing::getFolder($Folder);
 	}
 	
@@ -118,7 +127,10 @@ class ConnectorController extends BaseController
 			Yii::$app->response->format = Response::FORMAT_JSON;
 			$oldName = $File->filename;
 			
-			if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+			if (!$File->alias->can('rename')) {
+			    $model->addError('newFilename', 'Запрещено переименовывать файлы');
+			}
+			elseif ($model->load(Yii::$app->request->post()) && $model->validate()) {
 				try {
 				    if (($newFileName = FileSystem::rename($File, $model->newFilename))!==false) {
 				        return [
@@ -155,7 +167,10 @@ class ConnectorController extends BaseController
 		if (Yii::$app->request->isPost) {
 			Yii::$app->response->format = Response::FORMAT_JSON;
 	
-			if ($model->load(Yii::$app->request->post()) && $model->validate()){
+			if (!$ParentFolder->alias->can('mkdir')) {
+			    $model->addError('name', 'Запрещено создавать папки');
+			}
+			elseif ($model->load(Yii::$app->request->post()) && $model->validate()){
 			    try {
 			        if (FileSystem::mkdir($ParentFolder, $model->name)) {
         				return [
@@ -192,11 +207,18 @@ class ConnectorController extends BaseController
 			Yii::$app->response->format = Response::FORMAT_JSON;
 			
 			$message = 'Файл невозможно удалить';
+			
 			try {
-			    if (FileSystem::delete($File, $forceDelete)) {
-					return [
-    					'status' => 'success'
-    				];
+			    
+			    if ($File->alias->can('remove')) {
+    			    if (FileSystem::delete($File, $forceDelete)) {
+    					return [
+        					'status' => 'success'
+        				];
+    			    }
+			    }
+			    else {
+			        $message = 'Нет прав на удаление файлов';
 			    }
 			}
 			catch (FilesInFolderException $e){
@@ -227,7 +249,7 @@ class ConnectorController extends BaseController
 		$folders = Yii::$app->request->post('folders');
 		$result = [];
 		
-		$Listing = new Listing($configurationName=='none'?'alias':'configuration', $configurationName=='none'?$aliasId:$co);
+		$Listing = new Listing($configurationName=='none'?'alias':'configuration', $configurationName=='none'?$aliasId:$configurationName);
 		
 		foreach ($folders as $folder) {
 			if ($folder['alias']) {
@@ -267,7 +289,16 @@ class ConnectorController extends BaseController
 		$message = 'Операция закончилась ошибкой';
 		
 		try {
-		    if (FileSystem::paste($FileTarget, $FileObject, $newName, $type=='cut')) {
+		    if (!$FileTarget->alias->can('paste')) {
+		        $message = 'Нет прав на вставку файла';
+		    }
+		    elseif (!$FileObject->alias->can('copy')){
+		        $message = 'Нельзя копировать файл';
+		    }
+		    elseif ($type=='cut' && (!$FileObject->alias->can('remove') || !$FileObject->alias->can('cut'))){
+		        $message = 'Запрещено вырезать файлы';
+		    }
+		    elseif (FileSystem::paste($FileTarget, $FileObject, $newName, $type=='cut')) {
 		        $result = ['status' => 'success'];
 		        if ($newName) {
 		            $result['newName'] = $newName;
@@ -314,22 +345,27 @@ class ConnectorController extends BaseController
 		$filename = Yii::$app->request->post('filename');
 		$extension = Yii::$app->request->post('ext');
 		
-		try {
-		    $Uploader = new Uploader($Folder);
-		    if (($SavedFile = $Uploader->byLink($url, $filename, $extension, $tmp, $forceToRewrite))!==false) {
-		        if ($SavedFile->canThumb()){
-		            $SavedFile->thumb->create();
-		        }
-		        return [
-		            'status' => 'success',
-		            'file' => $SavedFile->item,
-		            'url'=> $SavedFile->url,
-		            'path'=>$SavedFile->aliasPath
-		        ];
-		    }
+		if (!$Folder->alias->can('upload')) {
+		    $message = 'Нет прав на загрузку файлов';
 		}
-		catch (\Exception $e) {
-		    $message = $e->getMessage();
+		else {
+    		try {
+    		    $Uploader = new Uploader($Folder);
+    		    if (($SavedFile = $Uploader->byLink($url, $filename, $extension, $tmp, $forceToRewrite))!==false) {
+    		        if ($SavedFile->canThumb()){
+    		            $SavedFile->thumb->create();
+    		        }
+    		        return [
+    		            'status' => 'success',
+    		            'file' => $SavedFile->item,
+    		            'url'=> $SavedFile->url,
+    		            'path'=>$SavedFile->aliasPath
+    		        ];
+    		    }
+    		}
+    		catch (\Exception $e) {
+    		    $message = $e->getMessage();
+    		}
 		}
 		
 		return [
@@ -352,22 +388,27 @@ class ConnectorController extends BaseController
 		$extension = Yii::$app->request->post('ext');		
 		$message = 'Не удалось загрузить файл';
 		
-		try {
-		    $Uploader = new Uploader($Folder);
-		    if (($SavedFile = $Uploader->upload('file', $filename, $extension, $forceToRewrite))!==false) {
-		        if ($SavedFile->canThumb()){
-		            $SavedFile->thumb->create();
-		        }
-		        return [
-		            'status' => 'success',
-		            'file' => $SavedFile->item,
-		            'url'=> $SavedFile->url,
-		            'path'=>$SavedFile->aliasPath
-		        ];
-		    }
+		if (!$Folder->alias->can('upload')) {
+		    $message = 'Нет прав на загрузку файлов';
 		}
-		catch (\Exception $e) {
-		    $message = $e->getMessage();
+		else {
+		    try {
+    		    $Uploader = new Uploader($Folder);
+    		    if (($SavedFile = $Uploader->upload('file', $filename, $extension, $forceToRewrite))!==false) {
+    		        if ($SavedFile->canThumb()){
+    		            $SavedFile->thumb->create();
+    		        }
+    		        return [
+    		            'status' => 'success',
+    		            'file' => $SavedFile->item,
+    		            'url'=> $SavedFile->url,
+    		            'path'=>$SavedFile->aliasPath
+    		        ];
+    		    }
+    		}
+    		catch (\Exception $e) {
+    		    $message = $e->getMessage();
+    		}
 		}
 		
 		return [
@@ -412,10 +453,6 @@ class ConnectorController extends BaseController
 			    'message' => 'Это не рисунок'
 			];
 		}
-		
-		/*if (!$File->alias->can) {
-		 return ['status' => 'error', 'message' => 'Не хватает прав'];
-		 }*/
 		
 		$tempDir = FileHelper::normalizePath(\Yii::getAlias($this->module->image['tmpViewFolder']));
 		$tempUrl = \Yii::getAlias($this->module->image['tmpViewUrl']);
@@ -495,9 +532,6 @@ class ConnectorController extends BaseController
 		$tempUrl = \Yii::getAlias($this->module->image['tmpViewUrl']);
 		
 		$image = new Image($File, $cnt, $tempDir, $tempUrl);
-		/*if (!$File->alias->can) {
-			return ['status' => 'error', 'message' => 'Не хватает прав'];
-		}*/
 		
 		if (($newFile = $image->saveAs($newName))!==false) {
 		    if (!$newName) {

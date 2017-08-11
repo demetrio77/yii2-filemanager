@@ -8,6 +8,7 @@ use demetrio77\manager\helpers\File;
 use demetrio77\manager\helpers\Thumb;
 use demetrio77\manager\helpers\FileSystemEventHandlers;
 use yii\web\ForbiddenHttpException;
+use demetrio77\manager\helpers\Right;
 
 class Module extends \yii\base\Module
 {
@@ -15,26 +16,7 @@ class Module extends \yii\base\Module
     public $configurations = [];
     public $thumbs = false;
     public $image = [];
-    public $userInstance = 'user';
-    public $slugify = true;
-    public $rights = [
-        'mkdir' => true,
-        'copy' => true,
-        'cut' => true,
-        'remove' => true,
-        'paste' => true,
-        'rename' => true,
-    ];
-    
-    //deprecated
-    public $registerBootstrap = false;
-    public $rewriteIfExists = false;
-    public $mkdir = true;
-    public $copy = true;
-    public $cut = false;
-    public $paste = true;
-    public $remove = false;
-    public $rename = false;
+    public $rights = [];
     
     public function init()
     {
@@ -45,7 +27,6 @@ class Module extends \yii\base\Module
         }
         
         \Yii::$container->set('yii\bootstrap\BootstrapAsset', ['js' => ['js/bootstrap.min.js']]);
-        
         $this->addListeners();
     }
     
@@ -71,5 +52,10 @@ class Module extends \yii\base\Module
         Event::on(File::class, File::EVENT_REMOVED, [FileSystemEventHandlers::class, 'onFileRemoved']);
         Event::on(File::class, File::EVENT_UPLOADED, [FileSystemEventHandlers::class, 'onFileUploaded']);
         Event::on(File::class, File::EVENT_IMAGE_CHANGED, [FileSystemEventHandlers::class, 'onImageChanged']);
+    }
+    
+    public function can($right)
+    {
+        return Right::module($right);
     }
 }
