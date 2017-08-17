@@ -42,7 +42,7 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
         return $this->handler->cropimage($width, $height, $x, $y) && $this->handler->writeimage($saveAs);
     }
     
-    public function constraints(int $width, int $height, $keepOrientation=true, string $saveAs = null)
+    public function constraints(int $width=0, int $height=0, $keepOrientation=true, int $maxWidth=0, int $maxHeight=0,string $saveAs = null)
     {
         if (!$saveAs) {
             $saveAs = $this->fullname;
@@ -52,7 +52,7 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
             $actualWidth = $this->handler->getimagewidth();
             $actualHeight = $this->handler->getimageheight();
             
-            if ( ($actualWidth-$actualHeight)*($width-$height)<0 && $keepOrientation) {
+            if ( ($actualWidth-$actualHeight)*($width-$height)<0 && !$keepOrientation) {
                 $w = $width;
                 $width=$height;
                 $height = $w;
@@ -75,9 +75,34 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
             $this->handler->resizeimage($width, 0, \imagick::FILTER_LANCZOS, 1);
             $this->handler->writeimage($saveAs);
         }
-        elseif (isset($height)) {
+        elseif ($height) {
             $this->handler->resizeimage(0, $height, \imagick::FILTER_LANCZOS, 1);
             $this->handler->writeimage($saveAs);
+        }
+        elseif ($maxWidth || $maxHeight){
+            $actualWidth = $this->handler->getimagewidth();
+            $actualHeight = $this->handler->getimageheight();
+            
+            if ($maxWidth && $maxHeight && ($actualHeight>$maxHeight || $actualWidth>$maxWidth)){
+                $actualRatio = $actualWidth/$actualHeight;
+                $maxRatio = $maxWidth/$maxHeight;
+                if ($actualRatio>$maxRatio){
+                    $this->handler->resizeimage($maxWidth, 0, \imagick::FILTER_LANCZOS, 1);
+                    $this->handler->writeimage($saveAs);
+                }
+                else {
+                    $this->handler->resizeimage(0, $maxHeight, \imagick::FILTER_LANCZOS, 1);
+                    $this->handler->writeimage($saveAs);
+                }
+            }
+            elseif ($maxWidth && ($actualWidth>$maxWidth)){
+                $this->handler->resizeimage($maxWidth, 0, \imagick::FILTER_LANCZOS, 1);
+                $this->handler->writeimage($saveAs);
+            }
+            elseif ($maxHeight && ($actualHeight>$maxHeight)){
+                $this->handler->resizeimage(0, $maxHeight, \imagick::FILTER_LANCZOS, 1);
+                $this->handler->writeimage($saveAs);
+            }
         }
     }
     

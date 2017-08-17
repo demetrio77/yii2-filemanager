@@ -23,6 +23,7 @@ use yii\helpers\FileHelper;
 class ImageCopy extends Thumb
 {
     private $copyAlias;
+    private $original;
     
     public function __construct($File, $copyAlias)
     {
@@ -35,8 +36,9 @@ class ImageCopy extends Thumb
         
         $this->optionsFolder = $this->file->alias->image['copies'][$copyAlias]['folder'];
         $this->optionsUrl = $this->file->alias->image['copies'][$copyAlias]['url'];
-        $this->width = $this->file->alias->image['copies'][$copyAlias]['width'];
-        $this->height = $this->file->alias->image['copies'][$copyAlias]['height'];             
+        $this->width = $this->file->alias->image['copies'][$copyAlias]['width'] ?? 0;
+        $this->height = $this->file->alias->image['copies'][$copyAlias]['height'] ?? 0;
+        $this->original = $this->file->alias->image['copies'][$copyAlias]['original'] ?? false;
     }
     
     public function getPath()
@@ -45,5 +47,30 @@ class ImageCopy extends Thumb
             $this->_path = FileHelper::normalizePath( Yii::getAlias($this->optionsFolder) . DIRECTORY_SEPARATOR . $this->file->getAliasPath());
         }
         return $this->_path;
+    }
+    
+    public function isOriginal()
+    {
+        return $this->original;
+    }
+    
+    public function create()
+    {
+        if (!file_exists($this->dir)){
+            FileHelper::createDirectory($this->dir);
+        }
+        
+        if ($this->width && $this->height){
+            return parent::create();
+        }
+        elseif ($this->width){
+            return (new Image($this->file))->resize($this->width, 0, $this->path);
+        }
+        elseif ($this->height){
+            return (new Image($this->file))->resize(0, $this->height, $this->path);
+        }
+        elseif ($this->original) {
+            return copy($this->file->path, $this->path);
+        }
     }
 }

@@ -6,6 +6,7 @@ use Yii;
 use yii\filters\AccessControl;
 use demetrio77\manager\helpers\Right;
 use yii\web\ForbiddenHttpException;
+use demetrio77\manager\helpers\Alias;
 
 class CkeditorController extends BaseController
 {

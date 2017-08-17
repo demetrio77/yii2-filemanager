@@ -42,11 +42,16 @@ class Image
     {
         $width = $this->file->alias->image['width'] ?? 0;
         $height = $this->file->alias->image['height'] ?? 0;
+        $maxWidth = $this->file->alias->image['maxWidth'] ?? 0;
+        $maxHeight = $this->file->alias->image['maxHeight'] ?? 0;
         $keepOrientation = $this->file->alias->image['keepOrientation'] ?? true;
         
-        if ($width || $height){
-            $this->instance->constraints($width, $height);
-        }        
+        $Original = $this->file->getOriginalCopy();
+        if ($Original) {
+            $Original->create();
+        }
+        
+        $this->instance->constraints($width, $height, $keepOrientation, $maxWidth, $maxHeight);
     }
     
     public function getTempFile($cnt=null)

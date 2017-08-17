@@ -384,8 +384,8 @@ class ConnectorController extends BaseController
 		
 		$Folder = new File($aliasId, $Path);
 		
-		$filename = Yii::$app->request->post('filename');
-		$extension = Yii::$app->request->post('ext');		
+		$filename = Yii::$app->request->post('filename')??'';
+		$extension = Yii::$app->request->post('ext')??'';		
 		$message = 'Не удалось загрузить файл';
 		
 		if (!$Folder->alias->can('upload')) {

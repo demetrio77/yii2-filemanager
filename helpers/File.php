@@ -172,6 +172,17 @@ class File extends Component
         return $copies;
     }
     
+    public function getOriginalCopy()
+    {
+        $copies = $this->getCopies();
+        foreach ($copies as $Copy){
+            if ($Copy->isOriginal()){
+                return $Copy;
+            }
+        }
+        return false;
+    }
+    
     public function getImage()
     {
         if ($this->isImage()){

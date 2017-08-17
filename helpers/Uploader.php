@@ -53,9 +53,15 @@ class Uploader
         return $currentBase;
     }
     
-    public function upload($uploaderInstanceName, $filename, $extension, $forceToRewrite=false)
+    public function upload($uploaderInstanceName, $filename='', $extension='', $forceToRewrite=false)
 	{
 	    $Instance = UploadedFile::getInstanceByName($uploaderInstanceName);
+	    
+	    if (!$filename && !$extension){
+	        $filename = $Instance->baseName;
+	        $extension = $Instance->extension;
+	    }
+	    
 	    $baseName = $this->getBaseName($filename, $extension, $forceToRewrite);
 	    
 	    $SavedFile = new File($this->destinationFolder->alias->id, $this->destinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );
@@ -96,7 +102,6 @@ class Uploader
 	    if (!$filename) {
 	        list($filename, $extension) = self::getFileNameByUrl($url);
 	    }
-	    
 	    
 	    $baseName = $this->getBaseName($filename, $extension, $forceToRewrite);
 	    $SavedFile = new File($this->destinationFolder->alias->id, $this->destinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );

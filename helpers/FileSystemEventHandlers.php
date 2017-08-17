@@ -26,7 +26,7 @@ class FileSystemEventHandlers
         //создаём копии картинки, если надо
         foreach ($event->file->copies as $Copy){
             try {
-                $Copy->create();
+                if (!$Copy->isOriginal()) $Copy->create();
             }
             catch (\Exception $e){};
         }

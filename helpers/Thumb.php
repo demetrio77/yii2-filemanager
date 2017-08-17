@@ -42,7 +42,7 @@ class Thumb extends Object
         $this->optionsFolder = $module->thumbs['folder'];
         $this->optionsUrl = $module->thumbs['url'];
         $this->width = $module->thumbs['width'];
-        $this->height = $module->thumbs['height'];               
+        $this->height = $module->thumbs['height'];
     }
     
     public function create()
