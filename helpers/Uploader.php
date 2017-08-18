@@ -37,6 +37,7 @@ class Uploader
     
     public function getBaseName($filename, $extension, $forceToRewrite)
     {
+        $extension = strtolower($extension);
         $filename = Inflector::slug(TransliteratorHelper::process($filename));
         
         if ($forceToRewrite) {
@@ -53,6 +54,23 @@ class Uploader
         return $currentBase;
     }
     
+    public function checkFileFormat($SavedFile)
+    {
+        if ($SavedFile->alias->extensions) {
+            if (!in_array($SavedFile->extension, $SavedFile->alias->extensions)){
+                throw new \Exception('Запрещено загружать файлы с данным расширением');
+            }
+        }
+        
+        if ($SavedFile->alias->mimetypes) {
+            if (!in_array($Instance->type, $SavedFile->alias->mimetypes)){
+                throw new \Exception('Запрещено загружать файлы данного типа');
+            }
+        }
+        
+        return true;
+    }
+    
     public function upload($uploaderInstanceName, $filename='', $extension='', $forceToRewrite=false)
 	{
 	    $Instance = UploadedFile::getInstanceByName($uploaderInstanceName);
@@ -66,19 +84,7 @@ class Uploader
 	    
 	    $SavedFile = new File($this->destinationFolder->alias->id, $this->destinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );
 	    
-	    if ($SavedFile->alias->extensions) {
-	        if (!in_array($SavedFile->extension, $SavedFile->alias->extensions)){
-	            throw new \Exception('Запрещено загружать файлы с данным расширением');
-	        }
-	    }
-	    
-	    if ($SavedFile->alias->mimetypes) {
-	        if (!in_array($Instance->type, $SavedFile->alias->mimetypes)){
-	            throw new \Exception('Запрещено загружать файлы данного типа');
-	        }
-	    }
-	    
-	    if ($Instance->saveAs($SavedFile->path)) {
+	    if ($this->checkFileFormat($SavedFile) && $Instance->saveAs($SavedFile->path)) {
 	        $SavedFile->afterFileUploaded();
 	        return $SavedFile;
 	    }
@@ -106,17 +112,7 @@ class Uploader
 	    $baseName = $this->getBaseName($filename, $extension, $forceToRewrite);
 	    $SavedFile = new File($this->destinationFolder->alias->id, $this->destinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );
 	    
-	    if ($SavedFile->alias->extensions) {
-	        if (!in_array($SavedFile->extension, $SavedFile->alias->extensions)){
-	            throw new \Exception('Запрещено загружать файлы с данным расширением');
-	        }
-	    }
-	    
-	    if ($SavedFile->alias->mimetypes) {
-	        if (!in_array($Instance->type, $SavedFile->alias->mimetypes)){
-	            throw new \Exception('Запрещено загружать файлы данного типа');
-	        }
-	    }
+	    $this->checkFileFormat($SavedFile);
 	    
 	    $this->uploadProgress = new UploaderProgress($tmp);
 	    
