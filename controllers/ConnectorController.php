@@ -343,7 +343,6 @@ class ConnectorController extends BaseController
 		
 		$url = Yii::$app->request->post('link');
 		$filename = Yii::$app->request->post('filename');
-		$extension = Yii::$app->request->post('ext');
 		
 		if (!$Folder->alias->can('upload')) {
 		    $message = 'Нет прав на загрузку файлов';
@@ -351,16 +350,15 @@ class ConnectorController extends BaseController
 		else {
     		try {
     		    $Uploader = new Uploader($Folder);
-    		    if (($SavedFile = $Uploader->byLink($url, $filename, $extension, $tmp, $forceToRewrite))!==false) {
-    		        if ($SavedFile->canThumb()){
-    		            $SavedFile->thumb->create();
-    		        }
-    		        return [
-    		            'status' => 'success',
-    		            'file' => $SavedFile->item,
-    		            'url'=> $SavedFile->url,
-    		            'path'=>$SavedFile->aliasPath
-    		        ];
+    		    if (($SavedFile = $Uploader->byLink($url, $filename, $tmp, $forceToRewrite))!==false) {
+    		        return ArrayHelper::merge([
+        		            'status' => 'success',
+        		            'file' => $SavedFile->item,
+        		            'url'=> $SavedFile->url,
+        		            'path'=>$SavedFile->aliasPath
+        		        ],
+    		            $SavedFile->isImage() ? ['copies' => $SavedFile->getCopiesUrls()] : []
+    		        );
     		    }
     		}
     		catch (\Exception $e) {
@@ -385,7 +383,6 @@ class ConnectorController extends BaseController
 		$Folder = new File($aliasId, $Path);
 		
 		$filename = Yii::$app->request->post('filename')??'';
-		$extension = Yii::$app->request->post('ext')??'';		
 		$message = 'Не удалось загрузить файл';
 		
 		if (!$Folder->alias->can('upload')) {
@@ -394,16 +391,15 @@ class ConnectorController extends BaseController
 		else {
 		    try {
     		    $Uploader = new Uploader($Folder);
-    		    if (($SavedFile = $Uploader->upload('file', $filename, $extension, $forceToRewrite))!==false) {
-    		        if ($SavedFile->canThumb()){
-    		            $SavedFile->thumb->create();
-    		        }
-    		        return [
-    		            'status' => 'success',
-    		            'file' => $SavedFile->item,
-    		            'url'=> $SavedFile->url,
-    		            'path'=>$SavedFile->aliasPath
-    		        ];
+    		    if (($SavedFile = $Uploader->upload('file', $filename, $forceToRewrite))!==false) {
+    		        return ArrayHelper::merge([
+        		            'status' => 'success',
+        		            'file' => $SavedFile->item,
+        		            'url'=> $SavedFile->url,
+        		            'path'=>$SavedFile->aliasPath
+        		        ],
+    		            $SavedFile->isImage() ? ['copies' => $SavedFile->getCopiesUrls()] : []
+    		        );
     		    }
     		}
     		catch (\Exception $e) {
@@ -560,6 +556,6 @@ class ConnectorController extends BaseController
 	    
 	    $File = new File($aliasId, $Path);
 		
-		return $File->exists ? ArrayHelper::merge( $File->item, ['url' => $File->url]) : ['status' => 'missed'];
+	    return $File->exists ? ArrayHelper::merge( $File->item, ['url' => $File->url], $File->isImage() ? ['copies' => $File->getCopiesUrls()] : []) : ['status' => 'missed'];
 	}
 }

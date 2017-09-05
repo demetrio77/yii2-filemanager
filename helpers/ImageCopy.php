@@ -49,6 +49,11 @@ class ImageCopy extends Thumb
         return $this->_path;
     }
     
+    public function getUrl()
+    {
+        return Yii::getAlias($this->optionsUrl) . DIRECTORY_SEPARATOR . $this->file->getAliasPath();
+    }
+    
     public function isOriginal()
     {
         return $this->original;

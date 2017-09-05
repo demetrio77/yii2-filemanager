@@ -9,6 +9,7 @@ use yii\helpers\Json;
 use yii\web\UploadedFile;
 use demetrio77\smartadmin\helpers\TransliteratorHelper;
 use yii\helpers\FileHelper;
+use demetrio77\smartadmin\behaviors\SlugBehavior;
 
 /**
  * @property demetrio77\manager\helpers\File $destinationFolder
@@ -58,7 +59,7 @@ class Uploader
     {
         if ($SavedFile->alias->extensions) {
             if (!in_array($SavedFile->extension, $SavedFile->alias->extensions)){
-                throw new \Exception('Запрещено загружать файлы с данным расширением');
+                throw new \Exception('Вы можете загружать файлы только с этими расширениями: '.implode(', ', $SavedFile->alias->extensions));
             }
         }
         
@@ -71,20 +72,40 @@ class Uploader
         return true;
     }
     
-    public function upload($uploaderInstanceName, $filename='', $extension='', $forceToRewrite=false)
+    public function checkFileSize($SavedFile, $checkSize=null)
+    {
+        if ($SavedFile->alias->maxFileSize) {
+            if ($checkSize===null){
+                $checkSize = $SavedFile->size;
+            }
+            if ( $checkSize > $SavedFile->alias->maxFileSize*1024*1024) {
+                throw new \Exception('Размер файла превышает максимально допустимый - '.$SavedFile->alias->maxFileSize.'Мб');
+            }
+        }
+        return true;
+    }
+    
+    public function upload($uploaderInstanceName, $filename='', $forceToRewrite=false)
 	{
 	    $Instance = UploadedFile::getInstanceByName($uploaderInstanceName);
 	    
-	    if (!$filename && !$extension){
-	        $filename = $Instance->baseName;
-	        $extension = $Instance->extension;
+	    if ($filename == '{{time}}'){
+	        $filename = microtime();
+	    }
+	    elseif ($filename == '{{hash}}'){
+	        $filename = uniqid();
 	    }
 	    
+	    if (!$filename){
+	        $filename = pathinfo(TransliteratorHelper::process($Instance->name), PATHINFO_FILENAME);
+	    }
+	    
+	    $extension = $Instance->extension;
 	    $baseName = $this->getBaseName($filename, $extension, $forceToRewrite);
 	    
 	    $SavedFile = new File($this->destinationFolder->alias->id, $this->destinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );
 	    
-	    if ($this->checkFileFormat($SavedFile) && $Instance->saveAs($SavedFile->path)) {
+	    if ($this->checkFileSize($SavedFile, $Instance->size) && $this->checkFileFormat($SavedFile) && $Instance->saveAs($SavedFile->path)) {
 	        $SavedFile->afterFileUploaded();
 	        return $SavedFile;
 	    }
@@ -103,10 +124,20 @@ class Uploader
 	    throw new \Exception($message);
 	}
 	
-	public function byLink($url, $filename=false, $extension=false, $tmp=0, $forceToRewrite=false)
+	public function byLink($url, $newName=false, $tmp=0, $forceToRewrite=false)
 	{
-	    if (!$filename) {
-	        list($filename, $extension) = self::getFileNameByUrl($url);
+	    list($filename, $extension) = self::getFileNameByUrl($url);
+	    
+	    if ($newName) {
+	        if ($newName == '{{time}}'){
+	            $filename = microtime();
+	        }
+	        elseif ($newName == '{{hash}}'){
+	            $filename = uniqid();
+	        }
+	        else {
+	            $filename = $newName;
+	        }
 	    }
 	    
 	    $baseName = $this->getBaseName($filename, $extension, $forceToRewrite);

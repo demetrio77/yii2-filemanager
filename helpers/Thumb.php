@@ -15,6 +15,7 @@ use yii\helpers\FileHelper;
  * @property \demetrio77\manager\helpers\File $folder
  * @property string $dir
  * @property string $path
+ * @property string $url
  * @property boolean $exists
  * @property string $basename
  * @property boolean $hasFiles
@@ -80,6 +81,11 @@ class Thumb extends Object
             $this->_path = FileHelper::normalizePath( Yii::getAlias($this->optionsFolder) . DIRECTORY_SEPARATOR . $this->file->alias->id . DIRECTORY_SEPARATOR . $this->file->getAliasPath());
         }
         return $this->_path;
+    }
+    
+    public function getUrl()
+    {
+        return Yii::getAlias($this->optionsUrl) . DIRECTORY_SEPARATOR . $this->file->alias->id . DIRECTORY_SEPARATOR . $this->file->getAliasPath();
     }
     
     public function getExists()

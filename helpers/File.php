@@ -172,6 +172,22 @@ class File extends Component
         return $copies;
     }
     
+    public function getCopiesUrls()
+    {
+        if (!$this->isImage()) return [];
+        
+        $result = [];
+        
+        if ($this->hasThumb()) {
+            $result['thumb']  = $this->thumb->url;
+        }
+        foreach ($this->getCopies() as $copyAlias => $Copy) {
+            $result[$copyAlias]  = $Copy->url;
+        }
+        
+        return $result;
+    }
+    
     public function getOriginalCopy()
     {
         $copies = $this->getCopies();

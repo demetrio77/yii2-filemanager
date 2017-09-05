@@ -31,6 +31,7 @@ class Alias extends Object
 	public $copies=[];
 	public $extensions = [];
 	public $mimetypes = [];
+	public $maxFileSize = 0;
 
 	public function init()
 	{
