@@ -30,6 +30,11 @@ class Module extends \yii\base\Module
         $this->addListeners();
     }
     
+    /**
+     * 
+     * @throws \Exception
+     * @return self
+     */
     public static function getInstance()
     {
         $Instance = parent::getInstance();

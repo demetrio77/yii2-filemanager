@@ -18,6 +18,16 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
         $this->handler = new \Imagick($fullname);
     }
     
+    public function getWidth()
+    {
+        return $this->handler->getimagewidth();
+    }
+    
+    public function getHeight()
+    {
+        return $this->handler->getimageheight();
+    }
+    
     public function cropThumb(int $width, int $height, string $saveAs = null)
     {
         $this->handler->cropThumbnailImage($width, $height);
@@ -63,12 +73,12 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
             
             if ($actualRatio>$expectRatio) {
                 $this->handler->cropthumbnailimage($width, $height);
-                $this->handler->writeimage($saveTo);
+                $this->handler->writeimage($saveAs);
             }
             else {
                 $this->handler->resizeimage($width, 0, \imagick::FILTER_LANCZOS, 1);
                 $this->handler->cropimage($width, $height, 0, round(($width/$actualRatio - $height)/4));
-                $this->handler->writeimage( $saveTo );
+                $this->handler->writeimage( $saveAs );
             }
         }
         elseif ($width) {

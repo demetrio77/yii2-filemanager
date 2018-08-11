@@ -128,7 +128,7 @@ class Image
         
         $padding = $this->file->alias->image['watermarkPadding'] ?? false;
         
-        return $this->instance->waterMark($watermarkFile, $watermarkPosition, $position, $saveAs);
+        return $this->instance->waterMark($watermarkFile, $watermarkPosition, 5, $saveAs);
     }
     
     public function saveAs($newName = full)
@@ -146,5 +146,15 @@ class Image
         }
         
         return false;
+    }
+    
+    public function getWidth()
+    {
+        return $this->instance->getWidth();
+    }
+    
+    public function getHeight()
+    {
+        return $this->instance->getHeight();
     }
 }
