@@ -3,9 +3,9 @@
 namespace demetrio77\manager\helpers;
 
 use demetrio77\manager\Module;
-use yii\base\Object;
+use yii\base\BaseObject;
 
-class Configuration extends Object
+class Configuration extends BaseObject
 {
     private $_name;
     private $_aliases = [];

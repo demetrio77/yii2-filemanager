@@ -2,14 +2,10 @@
 
 namespace demetrio77\manager\helpers;
 
-use yii\base\Object;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Inflector;
-use yii\helpers\Json;
 use yii\web\UploadedFile;
 use demetrio77\smartadmin\helpers\TransliteratorHelper;
 use yii\helpers\FileHelper;
-use demetrio77\smartadmin\behaviors\SlugBehavior;
 
 /**
  * @property demetrio77\manager\helpers\File $destinationFolder

@@ -3,8 +3,6 @@
 namespace demetrio77\manager\helpers;
 
 use Yii;
-use yii\base\Object;
-use demetrio77\manager\Module;
 use yii\helpers\FileHelper;
 
 /**

@@ -3,8 +3,6 @@
 namespace demetrio77\manager\helpers;
 
 use yii\helpers\FileHelper;
-use yii\base\Object;
-use yii\base\UnknownPropertyException;
 
 /**
  * ОПЕРАЦИИ НАД ФАЙЛАМИ В ФАЙЛОВОЙ СИСТЕМЕ

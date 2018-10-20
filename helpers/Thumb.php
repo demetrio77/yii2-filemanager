@@ -3,9 +3,9 @@
 namespace demetrio77\manager\helpers;
 
 use Yii;
-use yii\base\Object;
 use demetrio77\manager\Module;
 use yii\helpers\FileHelper;
+use yii\base\BaseObject;
 
 /**
  *
@@ -21,7 +21,7 @@ use yii\helpers\FileHelper;
  * @property boolean $hasFiles
  *
  */
-class Thumb extends Object
+class Thumb extends BaseObject
 {
     public $file;
     protected $_path;

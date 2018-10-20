@@ -2,10 +2,10 @@
 
 namespace demetrio77\manager\helpers;
 
-use yii\base\Object;
 use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
 use yii\web\ForbiddenHttpException;
+use yii\base\BaseObject;
 
 /**
  * 
@@ -13,7 +13,7 @@ use yii\web\ForbiddenHttpException;
  * @property Alias $alias
  * @property Configuration $configuration
  */
-class Listing extends Object
+class Listing extends BaseObject
 {
     private $root;
     private $rootType;

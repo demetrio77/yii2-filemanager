@@ -3,8 +3,6 @@
 namespace demetrio77\manager\helpers;
 
 use yii\helpers\FileHelper;
-use yii\base\Object;
-use yii\base\UnknownPropertyException;
 use demetrio77\manager\Module;
 use demetrio77\manager\events\DirectoryCreatedEvent;
 use demetrio77\manager\events\FileRenamedEvent;
@@ -12,7 +10,6 @@ use demetrio77\manager\events\FileRemovedEvent;
 use demetrio77\manager\events\FileCopiedEvent;
 use demetrio77\manager\events\FileUploadedEvent;
 use yii\base\Component;
-use yii\base\Event;
 use demetrio77\manager\events\ImageChangedEvent;
 
 /**

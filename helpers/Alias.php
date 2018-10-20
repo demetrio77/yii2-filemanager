@@ -5,8 +5,8 @@ namespace demetrio77\manager\helpers;
 use Yii;
 use demetrio77\manager\Module;
 use yii\helpers\ArrayHelper;
-use yii\base\Object;
 use yii\helpers\FileHelper;
+use yii\base\BaseObject;
 
 /**
  * 
@@ -16,7 +16,7 @@ use yii\helpers\FileHelper;
  * @property array $item
  *
  */
-class Alias extends Object
+class Alias extends BaseObject
 {
     private static $_aliases = [];
     private $module;
