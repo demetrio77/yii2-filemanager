@@ -13,7 +13,6 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "ext-imagick": "*",
         "yiisoft/yii2": ">=2.0.6",
         "flesler/jquery.scrollto" : "*",
         "bower-asset/jstree":"*",
