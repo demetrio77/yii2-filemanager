@@ -272,6 +272,7 @@ class ConnectorController extends BaseController
 	{
 		$target = Yii::$app->request->post('target');
 		$object = Yii::$app->request->post('object');
+		$forceCopy = Yii::$app->request->post('forceCopy', false);
 		
 		$type = $options['type'];
 		$newName = Yii::$app->request->post('newFilename', false);
@@ -298,8 +299,10 @@ class ConnectorController extends BaseController
 		    elseif ($type=='cut' && (!$FileObject->alias->can('remove') || !$FileObject->alias->can('cut'))){
 		        $message = 'Запрещено вырезать файлы';
 		    }
-		    elseif (FileSystem::paste($FileTarget, $FileObject, $newName, $type=='cut')) {
-		        $result = ['status' => 'success'];
+		    elseif (FileSystem::paste($FileTarget, $FileObject, $newName, $type=='cut', $forceCopy)) {
+		        $result = [
+		            'status' => 'success'
+                ];
 		        if ($newName) {
 		            $result['newName'] = $newName;
 		        }
@@ -425,7 +428,7 @@ class ConnectorController extends BaseController
 		return ;
 	}
 	
-	public function actionImage($options)
+	public function actionImage($options=[])
 	{
 	    Yii::$app->response->format = Response::FORMAT_JSON;
 	    
@@ -470,6 +473,7 @@ class ConnectorController extends BaseController
 		        $height = \Yii::$app->request->post('height', 0);
 		        $x = \Yii::$app->request->post('x', 0);
 		        $y = \Yii::$app->request->post('y', 0);
+
 		        if (!$width || !$height) {
 		            return ['status' => 'error', 'message' => 'Не заданы параметры'];
 		        }
@@ -488,6 +492,30 @@ class ConnectorController extends BaseController
 		        $watermarkPosition = \Yii::$app->request->post('watermark', 3);		        
 		        $result = $image->waterMark($watermarkPosition);
 		    break;
+
+		    case 'cropResize':
+                $alias = \Yii::$app->request->post('alias', '');
+                $folder = \Yii::$app->request->post('folder', '');
+                $Folder = new File($alias,$folder);
+                if (!$Folder->exists) {
+                    FileSystem::mkdir($Folder->folder, $Folder->filename);
+                }
+
+                $width = \Yii::$app->request->post('width', 0);
+		        $height = \Yii::$app->request->post('height', 0);
+		        $x = \Yii::$app->request->post('x', 0);
+		        $y = \Yii::$app->request->post('y', 0);
+		        $x2 = \Yii::$app->request->post('x2', 0);
+		        $y2 = \Yii::$app->request->post('y2', 0);
+
+                if ($image->cropResize($x2-$x+1,$y2-$y+1,$x,$y, $width,$height, $File->path)){
+                    FileSystem::paste($Folder, $File, false,false,true);
+                    return [
+                        'status' => 'success',
+                        'file' => $File->item
+                    ];
+                }
+            break;
 		}
 		
 		if (isset($result)){

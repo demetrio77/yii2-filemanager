@@ -51,7 +51,7 @@ class Uploader
         return $currentBase;
     }
     
-    public function checkFileFormat($SavedFile)
+    public function checkFileFormat($SavedFile, $mimeType)
     {
         if ($SavedFile->alias->extensions) {
             if (!in_array($SavedFile->extension, $SavedFile->alias->extensions)){
@@ -60,7 +60,7 @@ class Uploader
         }
         
         if ($SavedFile->alias->mimetypes) {
-            if (!in_array($Instance->type, $SavedFile->alias->mimetypes)){
+            if (!in_array($mimeType, $SavedFile->alias->mimetypes)){
                 throw new \Exception('Запрещено загружать файлы данного типа');
             }
         }
@@ -101,7 +101,7 @@ class Uploader
 	    
 	    $SavedFile = new File($this->destinationFolder->alias->id, $this->destinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );
 	    
-	    if ($this->checkFileSize($SavedFile, $Instance->size) && $this->checkFileFormat($SavedFile) && $Instance->saveAs($SavedFile->path)) {
+	    if ($this->checkFileSize($SavedFile, $Instance->size) && $this->checkFileFormat($SavedFile, $Instance->type) && $Instance->saveAs($SavedFile->path)) {
 	        $SavedFile->afterFileUploaded();
 	        return $SavedFile;
 	    }

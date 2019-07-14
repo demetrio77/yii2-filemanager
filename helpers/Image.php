@@ -102,6 +102,11 @@ class Image
         
         return $this->instance->crop($width, $height, $x, $y, $saveAs);
     }
+
+    public function cropResize(int $cropWidth, int $cropHeight, int $x, int $y, int $width, int $height, string $saveAs = null)
+    {
+        return $this->instance->cropResize($cropWidth, $cropHeight, $x, $y, $width, $height, $saveAs);
+    }
     
     public function turn($turn, string $saveAs = null)
     {

@@ -51,6 +51,16 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
         
         return $this->handler->cropimage($width, $height, $x, $y) && $this->handler->writeimage($saveAs);
     }
+
+    public function cropResize(int $cropWidth, int $cropHeight, int $x, int $y, int $width, int $height, string $saveAs = null)
+    {
+        if (!$saveAs) {
+            $saveAs = $this->fullname;
+        }
+
+        $this->handler->cropimage($cropWidth, $cropHeight, $x, $y);
+        return $this->handler->resizeimage($width, $height, \Imagick::FILTER_LANCZOS, 1) && $this->handler->writeimage($saveAs);
+    }
     
     public function constraints(int $width=0, int $height=0, $keepOrientation=true, int $maxWidth=0, int $maxHeight=0,string $saveAs = null)
     {

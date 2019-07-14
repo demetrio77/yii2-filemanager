@@ -62,7 +62,7 @@ class FileSystem
         return false;
     }
     
-    public static function paste($Destination, $ObjectFile, $newName = false, $isCut = false)
+    public static function paste($Destination, &$ObjectFile, $newName = false, $isCut = false, $forceCopy = false)
     {
         if (!$Destination->exists || !$Destination->isFolder()) {
             throw new \Exception('Не найдено, куда копировать');
@@ -78,7 +78,7 @@ class FileSystem
         
         $pasteName = $newName ? $newName . ($ObjectFile->extension ? '.' .$ObjectFile->extension : '') : $ObjectFile->basename;
         
-        if (self::fileInFolder($pasteName, $Destination)) {
+        if (self::fileInFolder($pasteName, $Destination) && !$forceCopy) {
             throw new FileExistsException($pasteName, 'В директории уже содержится объект с данным именем');
         }
         
