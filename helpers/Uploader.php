@@ -138,9 +138,6 @@ class Uploader
 	    
 	    $baseName = $this->getBaseName($filename, $extension, $forceToRewrite);
 	    $SavedFile = new File($this->destinationFolder->alias->id, $this->destinationFolder->aliasPath . DIRECTORY_SEPARATOR . $baseName );
-	    
-	    $this->checkFileFormat($SavedFile);
-	    
 	    $this->uploadProgress = new UploaderProgress($tmp);
 	    
 	    $ch = curl_init();	    
@@ -172,6 +169,8 @@ class Uploader
 	    }
 	        
 	    fclose($f);
+
+        $this->checkFileFormat($SavedFile, mime_content_type($SavedFile->path));
 	    $this->uploadProgress->unlink();
 
 	    $SavedFile->afterFileUploaded();
