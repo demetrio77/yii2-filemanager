@@ -92,6 +92,8 @@
 			  	<span class="glyphicon glyphicon-refresh"></span> Обновить
 			  </button>
 			</div>
+
+            <div id="image-preview" style="margin-top:10px; width:100%"></div>
 		</td>
 	</tr>
 	<tr>

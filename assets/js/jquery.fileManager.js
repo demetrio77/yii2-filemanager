@@ -680,6 +680,7 @@
                 	this.sidePanel = $('.fm-panel', $this);
                 	this.cutncopyButtons = $('.cutncopy', this.sidePanel);
                 	this.pasteButton = $('.action-paste', this.sidePanel);
+                	this.imagePreview = $('#image-preview');
                 	this.modal = $('.modal', this.footer);
                 	
                 	document.body.onselectstart= function() {return false}
@@ -965,6 +966,7 @@
                 		this.fileItem(this.selected).addClass('ft-item-selected');
                 		this.setFooter();
                 		this.sidePanelItems();
+                		this.setImagePreview();
                 	};
                 	
                 	this.setFooter = function() {
@@ -1022,6 +1024,16 @@
                    		
                    		$('.action-mkdir', this.sidePanel).css('display', (folder && folder.getAlias().mkdir)? 'block' : 'none');
                 	};
+
+					this.setImagePreview = function() {
+						var current = model.data[this.selected];
+
+						if (!current.isFolder && current.isI) {
+							this.imagePreview.html('<img src="' + current.url() + '" style="width:100%; height:auto;" />');
+						} else {
+							this.imagePreview.html('');
+						}
+					};
                 	
                 	this.upload = function(id) {
                 		return '<ul class="nav nav-tabs" role="tablist">\
@@ -2140,6 +2152,7 @@
                 								model.refreshItem(view.selected, json.file);
                 								modal.close();
                 								view.refreshItem(view.selected);
+                								view.setImagePreview();
                 							}
                 							else if (json.status=='newFile') {
             									var res = model.addFile(view.current, json.file);
@@ -2147,6 +2160,7 @@
 	         	                                view.addFile(res);
 	         	                                view.scroll(res);
 	         	                                self.dndHandlers();
+												view.setImagePreview();
             								}
             								else if (json.status=='error') {
                 								me.setError(json.message);
