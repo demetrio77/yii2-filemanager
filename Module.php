@@ -17,6 +17,7 @@ class Module extends \yii\base\Module
     public $thumbs = false;
     public $image = [];
     public $rights = [];
+    public $defaultFolder = [];
     
     public function init()
     {

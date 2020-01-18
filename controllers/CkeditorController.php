@@ -18,7 +18,7 @@ class CkeditorController extends BaseController
 		$langCode = Yii::$app->request->get('langCode', 'ru');
 		$CKEditorFuncNum = Yii::$app->request->get('CKEditorFuncNum', '');
 		$alias = Yii::$app->request->get('alias', false);
-		$defaultFolder = Yii::$app->request->get('defaultFolder', ['alias' => 'pages', 'path' => date('Y/m/d')]);
+		$defaultFolder = Yii::$app->request->get('defaultFolder', $this->module->configurations['folder']);
 		
 		if ($alias){
 		    $Alias = Alias::findById($alias);

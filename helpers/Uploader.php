@@ -120,9 +120,13 @@ class Uploader
 	    throw new \Exception($message);
 	}
 	
-	public function byLink($url, $newName=false, $tmp=0, $forceToRewrite=false)
+	public function byLink($url, $newName=false, $tmp=0, $forceToRewrite=false, $defaultExtension='')
 	{
 	    list($filename, $extension) = self::getFileNameByUrl($url);
+
+	    if (!$extension && $defaultExtension) {
+            $extension = $defaultExtension;
+        }
 	    
 	    if ($newName) {
 	        if ($newName == '{{time}}'){

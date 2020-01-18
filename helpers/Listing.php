@@ -105,7 +105,7 @@ class Listing extends BaseObject
             if ($F->isFolder()) {
                 $result[$Alias->id . ($Current? DIRECTORY_SEPARATOR . $Current:'') ] = self::getFolder($F);
             }
-        }        
+        }
         
         return $result;
     }
