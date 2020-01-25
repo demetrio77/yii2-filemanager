@@ -27,7 +27,7 @@ class ConnectorController extends BaseController
 		switch ($action) {
 			case 'init':
 				return $this->actionInit();
-			case 'folder': 
+			case 'folder':
 				return $this->actionFolder($options );
 			case 'rename':
 				return $this->actionRename($options);
@@ -47,7 +47,7 @@ class ConnectorController extends BaseController
 				return $this->actionProgress($options);
 			case 'upload':
 				return $this->actionUpload($options);
-			case 'image': 
+			case 'image':
 				return $this->actionImage($options);
 			case 'saveimage':
 				return $this->actionSaveImage($options);
@@ -55,14 +55,14 @@ class ConnectorController extends BaseController
 				return $this->actionItem($options);
 		}
 	}
-	
+
 	public function actionInit()
 	{
 	    Yii::$app->response->format = Response::FORMAT_JSON;
-	    
+
 	    $init   = Yii::$app->request->post('init', ['type'=>'configuration', 'value'=>'default']);
 	    $loadTo = Yii::$app->request->post('loadTo', false);
-	  
+
 	    $Listing = new Listing($init['type'], $init['value']);
 		try {
 		    $items = $Listing->getTill($loadTo['value'], $loadTo['type'], isset($loadTo['withPath'])?$loadTo['withPath']:false);
@@ -77,23 +77,23 @@ class ConnectorController extends BaseController
 		    ];
 		}
 	}
-	
-	public function actionFolder($options) 
+
+	public function actionFolder($options)
 	{
 		$Path = $options['path']?? '';
 		$aliasId =  $options['alias'] ?? '';
 		$configurationName = $options['configuration'] ?? 'default';
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		
+
 		if ($configurationName!='none') {
 		    $Configuration = new Configuration($configurationName);
 		    if (!$Configuration->has($aliasId)) {
 		        throw new NotFoundHttpException();
 		    }
 		}
-		
+
 		$Folder = new File($aliasId, $Path);
-		
+
 		if (!$Folder->exists || !$Folder->isFolder()){
 		    return [
 		        'found' => false,
@@ -101,7 +101,7 @@ class ConnectorController extends BaseController
 		        'message' => 'Не найдена папка'
 		    ];
 		}
-		
+
 		if (!$Folder->alias->can('view')){
 		    return [
 		        'found' => false,
@@ -109,23 +109,23 @@ class ConnectorController extends BaseController
 		        'message' => 'Нет доступа к папке'
 		    ];
 		}
-		
+
 		return Listing::getFolder($Folder);
 	}
-	
+
 	public function actionRename($options)
 	{
 		$Path = $options['path'] ?? '';
 		$aliasId =  $options['alias'] ?? '';
 		$file = $options['file'] ?? '';
-		
+
 		$File = new File($aliasId, $Path);
 		$model = RenameModel::loadFromFile($File);
-		
+
 		if (Yii::$app->request->isPost) {
 			Yii::$app->response->format = Response::FORMAT_JSON;
 			$oldName = $File->filename;
-			
+
 			if (!$File->alias->can('rename')) {
 			    $model->addError('newFilename', 'Запрещено переименовывать файлы');
 			}
@@ -143,7 +143,7 @@ class ConnectorController extends BaseController
 				catch (\Exception $e) {
 				    $model->addError('newFilename', $e->getMessage());
 				};
-			}	
+			}
 
 			return [
 				'status' => 'validate',
@@ -154,18 +154,18 @@ class ConnectorController extends BaseController
 			return $this->renderAjax('rename', ['model' => $model]);
 		}
 	}
-	
+
 	public function actionMkdir($options)
 	{
 		$Path = $options['path'] ?? '';
 		$aliasId =  $options['alias'] ?? '';
-	
+
 		$ParentFolder = new File($aliasId, $Path);
 		$model = MkdirModel::loadFromFile($ParentFolder);
-	
+
 		if (Yii::$app->request->isPost) {
 			Yii::$app->response->format = Response::FORMAT_JSON;
-	
+
 			if (!$ParentFolder->alias->can('mkdir')) {
 			    $model->addError('name', 'Запрещено создавать папки');
 			}
@@ -183,7 +183,7 @@ class ConnectorController extends BaseController
 			        $model->addError('name', $e->getMessage());
 			    };
 			}
-			
+
 			return [
 			   'status' => 'validate',
 			   'html' => $this->renderAjax('mkdir', ['model' => $model])
@@ -193,22 +193,22 @@ class ConnectorController extends BaseController
 			return $this->renderAjax('mkdir', ['model' => $model]);
 		}
 	}
-	
+
 	public function actionDelete($options)
 	{
 		$Path = $options['path'] ?? '';
 		$aliasId =  $options['alias'] ?? '';
         $forceDelete = Yii::$app->request->post('forceDelete', false);
-		
+
 		$File = new File($aliasId, $Path);
-		
+
 		if (Yii::$app->request->isPost && Yii::$app->request->post('yes')) {
 			Yii::$app->response->format = Response::FORMAT_JSON;
-			
+
 			$message = 'Файл невозможно удалить';
-			
+
 			try {
-			    
+
 			    if ($File->alias->can('remove')) {
     			    if (FileSystem::delete($File, $forceDelete)) {
     					return [
@@ -227,9 +227,9 @@ class ConnectorController extends BaseController
 			    ];
 			}
 			catch (\Exception $e){
-			    $message = $e->getMessage(); 
+			    $message = $e->getMessage();
 			}
-			
+
 			return [
 			    'status' => 'validate',
 			    'html' => $this->renderAjax('delete', ['file' => $File, 'message' => $message, 'type' =>'message'])
@@ -239,17 +239,17 @@ class ConnectorController extends BaseController
 			return $this->renderAjax('delete', [ 'file' => $File]);
 		}
 	}
-	
+
 	public function actionRefresh($options)
 	{
 		$configurationName = $options['configuration'] ?? 'default';
 		$aliasId =  $options['alias'] ?? '';
-		
+
 		$folders = Yii::$app->request->post('folders');
 		$result = [];
-		
+
 		$Listing = new Listing($configurationName=='none'?'alias':'configuration', $configurationName=='none'?$aliasId:$configurationName);
-		
+
 		foreach ($folders as $folder) {
 			if ($folder['alias']) {
 				$Folder = new File($folder['alias'], $folder['path']);
@@ -262,32 +262,32 @@ class ConnectorController extends BaseController
 			}
 			$result[$folder['uid']] = $folder;
 		}
-		
+
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		return $result;
 	}
-	
+
 	public function actionPaste($options)
 	{
 		$target = Yii::$app->request->post('target');
 		$object = Yii::$app->request->post('object');
 		$forceCopy = Yii::$app->request->post('forceCopy', false);
-		
+
 		$type = $options['type'];
 		$newName = Yii::$app->request->post('newFilename', false);
-		
+
 		$aliasTarget = $target['alias'];
 		$pathTarget =  $target['path'];
-		
+
 		$aliasObject = $object['alias'];
 		$pathObject =  $object['path'];
-		
+
 		$FileTarget = new File($aliasTarget, $pathTarget);
 		$FileObject = new File($aliasObject, $pathObject);
-				
+
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		$message = 'Операция закончилась ошибкой';
-		
+
 		try {
 		    if (!$FileTarget->alias->can('paste')) {
 		        $message = 'Нет прав на вставку файла';
@@ -312,18 +312,18 @@ class ConnectorController extends BaseController
 		    return [
 		        'status' => 'validate',
 		        'html' => $this->renderAjax('newname', [
-		            'oldName' => $e->getToChangeName(), 
-		            'File' => $FileObject 
+		            'oldName' => $e->getToChangeName(),
+		            'File' => $FileObject
 		        ])
 		    ];
 		}
 		catch (\Exception $e) {
 		    $message = $e->getMessage();
 		}
-		   
+
 		return ['result' => 'error', 'message' => $message];
 	}
-	
+
 	public function actionExistrename($options)
 	{
 		$target = $options['target'];
@@ -331,28 +331,27 @@ class ConnectorController extends BaseController
 		$File = new File($object['alias'], $object['path']);
 		return $this->renderAjax('newname', ['oldName' => $File->filename, 'target' => $target, 'object' => $object, 'File' => $File ]);
 	}
-	
+
 	public function actionLink($options)
 	{
 	    $Path = $options['path'] ?? '';
 	    $aliasId =  $options['alias'] ?? '';
 		$tmp = $options['tmp'] ?? '';
-		$forceToRewrite = $options['force'] ?? false;
-		
+
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		
+
 		$Folder = new File($aliasId, $Path);
-		
+
 		$url = Yii::$app->request->post('link');
 		$filename = Yii::$app->request->post('filename');
-		
+
 		if (!$Folder->alias->can('upload')) {
 		    $message = 'Нет прав на загрузку файлов';
 		}
 		else {
     		try {
     		    $Uploader = new Uploader($Folder);
-    		    if (($SavedFile = $Uploader->byLink($url, $filename, $tmp, $forceToRewrite))!==false) {
+    		    if (($SavedFile = $Uploader->byLink($url, $filename, $tmp, $Folder->alias->rewriteIfExists))!==false) {
     		        return ArrayHelper::merge([
         		            'status' => 'success',
         		            'file' => $SavedFile->item,
@@ -367,26 +366,26 @@ class ConnectorController extends BaseController
     		    $message = $e->getMessage();
     		}
 		}
-		
+
 		return [
 		    'status' => 'error',
 		    'message' => $message
 		];
 	}
-	
+
 	public function actionUpload($options)
 	{
 		$Path = $options['path'] ?? '';
 		$aliasId =  $options['alias'] ?? '';
 	    $forceToRewrite = $options['force'] ?? false;
-	    
+
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		
+
 		$Folder = new File($aliasId, $Path);
-		
+
 		$filename = Yii::$app->request->post('filename')??'';
 		$message = 'Не удалось загрузить файл';
-		
+
 		if (!$Folder->alias->can('upload')) {
 		    $message = 'Нет прав на загрузку файлов';
 		}
@@ -408,55 +407,55 @@ class ConnectorController extends BaseController
     		    $message = $e->getMessage();
     		}
 		}
-		
+
 		return [
 		    'status' => 'error',
 		    'message' => $message
 		];
 	}
-	
+
 	public function actionProgress($options)
 	{
 		$tmp = $options['tmp'] ?? '';
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		
+
 		if ($tmp) {
 		    return (new UploaderProgress($tmp))->read(true);
 		}
-		
+
 		return ;
 	}
-	
+
 	public function actionImage($options=[])
 	{
 	    Yii::$app->response->format = Response::FORMAT_JSON;
-	    
+
 	    if (!isset($this->module->image)) {
 	        return [
 	            'status' => 'error',
 	            'message' => 'Не заданы настроки обработки изображений в модуле'
 	        ];
 		}
-	    
+
 	    $Path = $options['path'] ?? '';
 		$aliasId =  $options['alias'] ?? '';
 		$cnt = $options['cnt'] ?? 0;
 		$action = \Yii::$app->request->post('action', '');
-				
+
 		$File = new File($aliasId, $Path);
-		
+
 		if (!$File->isImage()) {
 			return [
-			    'status' => 'error', 
+			    'status' => 'error',
 			    'message' => 'Это не рисунок'
 			];
 		}
-		
+
 		$tempDir = FileHelper::normalizePath(\Yii::getAlias($this->module->image['tmpViewFolder']));
 		$tempUrl = \Yii::getAlias($this->module->image['tmpViewUrl']);
-		
+
 		$image = new Image($File, $cnt, $tempDir, $tempUrl);
-		
+
 		switch ($action) {
 		    case 'resize':
 		        $width = \Yii::$app->request->post('width', 0);
@@ -466,7 +465,7 @@ class ConnectorController extends BaseController
 		        }
 		        $result = $image->resize($width,$height);
 		    break;
-		    
+
 		    case 'crop':
 		        $width = \Yii::$app->request->post('width', 0);
 		        $height = \Yii::$app->request->post('height', 0);
@@ -478,7 +477,7 @@ class ConnectorController extends BaseController
 		        }
 		        $result = $image->crop($width,$height,$x,$y);
 		    break;
-		    
+
 		    case 'turn':
 		        $turn = \Yii::$app->request->post('turn', null);
 		        if ($turn===null) {
@@ -486,9 +485,9 @@ class ConnectorController extends BaseController
 		        }
 		        $result = $image->turn($turn);
 		    break;
-		    
+
 		    case 'watermark':
-		        $watermarkPosition = \Yii::$app->request->post('watermark', 3);		        
+		        $watermarkPosition = \Yii::$app->request->post('watermark', 3);
 		        $result = $image->waterMark($watermarkPosition);
 		    break;
 
@@ -516,7 +515,7 @@ class ConnectorController extends BaseController
                 }
             break;
 		}
-		
+
 		if (isset($result)){
 		    return $result ? [
 		        'status' => 'success',
@@ -529,33 +528,33 @@ class ConnectorController extends BaseController
 		}
 		else {
 		    return [
-		        'status' => 'error', 
+		        'status' => 'error',
 		        'message' => 'Не задано действие'
 		    ];
 		}
 	}
-	
+
 	public function actionSaveImage($options)
 	{
 		Yii::$app->response->format = Response::FORMAT_JSON;
-		
+
 		$Path = $options['path'] ?? '';
 		$aliasId =  $options['alias'] ?? '';
-		
+
 		$File = new File($aliasId, $Path);
-		
+
 		if (!$File->isImage()) {
 			return ['status' => 'error', 'message' => 'Это не рисунок'];
 		}
-		
+
 		$cnt = Yii::$app->request->post('cnt', 0);
 		$newName = Yii::$app->request->post('newName', '');
-		
+
 		$tempDir = FileHelper::normalizePath(\Yii::getAlias($this->module->image['tmpViewFolder']));
 		$tempUrl = \Yii::getAlias($this->module->image['tmpViewUrl']);
-		
+
 		$image = new Image($File, $cnt, $tempDir, $tempUrl);
-		
+
 		if (($newFile = $image->saveAs($newName))!==false) {
 		    if (!$newName) {
 		        return [
@@ -570,19 +569,19 @@ class ConnectorController extends BaseController
 		        ];
 		    }
 		}
-		
+
 		return ['status' => 'error', 'message' => 'Не удалось сохранить файл'];
 	}
-	
+
 	public function actionItem($options)
 	{
 	    Yii::$app->response->format = Response::FORMAT_JSON;
-	    
+
 	    $Path = $options['path'] ?? '';
 	    $aliasId =  $options['alias'] ?? '';
-	    
+
 	    $File = new File($aliasId, $Path);
-		
+
 	    return $File->exists ? ArrayHelper::merge( $File->item, ['url' => $File->url], $File->isImage() ? ['copies' => $File->getCopiesUrls()] : []) : ['status' => 'missed'];
 	}
 }
