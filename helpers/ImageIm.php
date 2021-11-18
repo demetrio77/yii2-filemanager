@@ -62,24 +62,42 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
         return $this->handler->resizeimage($width, $height, \Imagick::FILTER_LANCZOS, 1) && $this->save($saveAs);
     }
 
-    public function constraints(int $width=0, int $height=0, $keepOrientation=true, int $maxWidth=0, int $maxHeight=0,string $saveAs = null)
+    public function constraints(int $width=0, int $height=0, $keepOrientation=true, int $maxWidth=0, int $maxHeight=0,string $saveAs = null, $keepContent = false)
     {
         if (!$saveAs) {
             $saveAs = $this->fullname;
         }
 
-        if ($width && $height) {
-            $actualWidth = $this->handler->getimagewidth();
-            $actualHeight = $this->handler->getimageheight();
+        $actualWidth = $this->handler->getimagewidth();
+        $actualHeight = $this->handler->getimageheight();
+        $actualRatio = $actualWidth/$actualHeight;
+        $expectRatio = $width/$height;
 
+        if ($keepContent && ($actualRatio * 0.85 >= $expectRatio  || $actualRatio <= $expectRatio * 0.85)) {
+            $original = clone $this->handler;
+            if ($actualRatio >= $expectRatio) {
+                $h = $width / $actualRatio;
+                $original->resizeImage($width, $h, \imagick::FILTER_LANCZOS, 1);
+                $x = 0;
+                $y = floor(($height - $h) /2);
+            } else {
+                $w = $height * $actualRatio;
+                $original->resizeImage($w, $height, \imagick::FILTER_LANCZOS, 1);
+                $x = floor(($width - $w) / 2);
+                $y = 0;
+            }
+
+            $this->handler = new \Imagick();
+            $this->handler->newImage($width, $height, '#333333', $original->getFormat());
+            $this->handler->compositeImage($original, \Imagick::COMPOSITE_DEFAULT,$x, $y);
+            $this->save($saveAs);
+
+        } elseif ($width && $height) {
             if ( ($actualWidth-$actualHeight)*($width-$height)<0 && !$keepOrientation) {
                 $w = $width;
                 $width=$height;
                 $height = $w;
             }
-
-            $actualRatio = $actualWidth/$actualHeight;
-            $expectRatio = $width/$height;
 
             if ($actualRatio>$expectRatio) {
                 $this->handler->cropthumbnailimage($width, $height);
@@ -100,11 +118,7 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
             $this->save($saveAs);
         }
         elseif ($maxWidth || $maxHeight){
-            $actualWidth = $this->handler->getimagewidth();
-            $actualHeight = $this->handler->getimageheight();
-
             if ($maxWidth && $maxHeight && ($actualHeight>$maxHeight || $actualWidth>$maxWidth)){
-                $actualRatio = $actualWidth/$actualHeight;
                 $maxRatio = $maxWidth/$maxHeight;
                 if ($actualRatio>$maxRatio){
                     $this->handler->resizeimage($maxWidth, 0, \imagick::FILTER_LANCZOS, 1);
