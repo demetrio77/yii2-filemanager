@@ -71,7 +71,10 @@ class ImageIm implements \demetrio77\manager\helpers\ImageInterface
         $actualWidth = $this->handler->getimagewidth();
         $actualHeight = $this->handler->getimageheight();
         $actualRatio = $actualWidth/$actualHeight;
-        $expectRatio = $width/$height;
+
+        if ($width && $height) {
+            $expectRatio = $width/$height;
+        }
 
         if ($keepContent && ($actualRatio * 0.85 >= $expectRatio  || $actualRatio <= $expectRatio * 0.85)) {
             $original = clone $this->handler;
