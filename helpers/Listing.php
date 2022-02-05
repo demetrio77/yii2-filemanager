@@ -48,12 +48,12 @@ class Listing extends BaseObject
 
         $Alias = null;
         $Path = null;
-        
+
         if (is_array($tillObject) && isset($tillObject['alias'],$tillObject['path'])) {
             $Alias = Alias::findById($tillObject['alias']);
             $Path = $tillObject['path'];
         } 
-        elseif (!is_array($tillObject)) {
+        elseif ($tillObject && !is_array($tillObject)) {
             if ($isUrl) {
                 $Alias = Alias::findByUrl($tillObject);
                 $Path = $Alias ? $Alias->extractPathFromUrl($tillObject) : false;                 
@@ -62,6 +62,9 @@ class Listing extends BaseObject
                 $Alias = Alias::findByPath($tillObject);
                 $Path = $Alias ? $Alias->extractPathFromFullpath($tillObject) : false;
             }
+        } else {
+            $Alias = Alias::findById($this->configuration->aliases()[0]);
+            $Path = '';
         }
         
         if ($Alias) {

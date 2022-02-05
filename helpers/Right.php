@@ -28,7 +28,7 @@ class Right
             elseif (isset($permissions[$permissionName]) && $permissions[$permissionName]) {
                 return true;
             }
-            
+
             foreach ($rights as $userInstance => $permissions) {
                 //если имем дело с авторизовавшимся юзером
                 if (isset(Yii::$app->{$userInstance}) && Yii::$app->{$userInstance} instanceof User && !Yii::$app->{$userInstance}->isGuest) {

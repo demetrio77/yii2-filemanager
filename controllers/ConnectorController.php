@@ -65,7 +65,7 @@ class ConnectorController extends BaseController
 
 	    $Listing = new Listing($init['type'], $init['value']);
 		try {
-		    $items = $Listing->getTill($loadTo['value'], $loadTo['type'], isset($loadTo['withPath'])?$loadTo['withPath']:false);
+		    $items = $Listing->getTill($loadTo['value']??'', $loadTo['type']??'', isset($loadTo['withPath'])?$loadTo['withPath']:false);
 		    return [
 		        'found' => true,
 		        'json' =>$items
